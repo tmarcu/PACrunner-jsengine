@@ -1,0 +1,10 @@
+Manager hierarchy
+=================
+
+Service		org.pacrunner
+Interface	org.pacrunner.Manager
+Object path	/org/pacrunner/manager
+
+Methods		object CreateProxyConfiguration(dict settings)
+
+		void DestroyProxyConfiguration(object config)

@@ -23,11 +23,15 @@
 #include <glib.h>
 
 #define PACRUNNER_SERVICE	"org.pacrunner"
+#define PACRUNNER_PATH		"/org/pacrunner"
 
 #define PACRUNNER_ERROR_INTERFACE	PACRUNNER_SERVICE ".Error"
 
+#define PACRUNNER_MANAGER_INTERFACE	PACRUNNER_SERVICE ".Manager"
+#define PACRUNNER_MANAGER_PATH		PACRUNNER_PATH "/manager"
+
 #define PACRUNNER_CLIENT_INTERFACE	PACRUNNER_SERVICE ".Client"
-#define PACRUNNER_CLIENT_PATH		"/org/pacrunner/client"
+#define PACRUNNER_CLIENT_PATH		PACRUNNER_PATH "/client"
 
 
 void pacrunner_info(const char *format, ...)
@@ -60,6 +64,9 @@ struct pacrunner_debug_desc {
 int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
 
+
+int __pacrunner_manager_init(DBusConnection *conn);
+void __pacrunner_manager_cleanup();
 
 int __pacrunner_client_init(DBusConnection *conn);
 void __pacrunner_client_cleanup();

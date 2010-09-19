@@ -1,0 +1,35 @@
+#!/usr/bin/python
+
+import sys
+import time
+import dbus
+
+if (len(sys.argv) < 2):
+	print "Usage: %s <url> [domain]" % (sys.argv[0])
+	sys.exit(1)
+
+bus = dbus.SystemBus()
+
+manager = dbus.Interface(bus.get_object('org.pacrunner',
+			'/org/pacrunner/manager'), 'org.pacrunner.Manager')
+
+url = sys.argv[1]
+
+if (len(sys.argv) > 2):
+	domain = sys.argv[2]
+else:
+	domain = ""
+
+path = manager.CreateProxyConfiguration( { "URL" : url, "Domain" : domain } )
+
+print "Proxy configuration: %s" % (path)
+
+print "Press CTRL-C to remove configuration"
+
+try:
+	time.sleep(1000)
+	print "Terminating session"
+except:
+	pass
+
+manager.DestroyProxyConfiguration(path)
