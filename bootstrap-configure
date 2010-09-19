@@ -9,4 +9,5 @@ fi
 		--enable-debug \
 		--prefix=/usr \
 		--mandir=/usr/share/man \
-		--disable-datafiles $*
+		--disable-datafiles \
+		--enable-capng $*
