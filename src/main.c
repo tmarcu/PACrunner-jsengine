@@ -29,6 +29,8 @@
 #include <string.h>
 #include <signal.h>
 
+#include <gdbus.h>
+
 #ifdef HAVE_CAPNG
 #include <cap-ng.h>
 #endif
@@ -115,6 +117,13 @@ int main(int argc, char *argv[])
 	}
 
 	main_loop = g_main_loop_new(NULL, FALSE);
+
+#ifdef NEED_THREADS
+	if (dbus_threads_init_default() == FALSE) {
+		fprintf(stderr, "Can't init usage of threads\n");
+		exit(1);
+	}
+#endif
 
 	__pacrunner_log_init(option_debug, option_detach);
 
