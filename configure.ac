@@ -1,0 +1,79 @@
+AC_PREREQ(2.60)
+AC_INIT(pacrunner, 0.0)
+
+AM_INIT_AUTOMAKE([foreign subdir-objects])
+AM_CONFIG_HEADER(config.h)
+
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+AM_MAINTAINER_MODE
+
+AC_PREFIX_DEFAULT(/usr/local)
+
+PKG_PROG_PKG_CONFIG
+
+COMPILER_FLAGS
+
+AC_LANG_C
+
+AC_PROG_CC
+AC_PROG_CC_PIE
+AC_PROG_INSTALL
+
+AC_ARG_ENABLE(optimization, AC_HELP_STRING([--disable-optimization],
+			[disable code optimization through compiler]), [
+	if (test "${enableval}" = "no"); then
+		CFLAGS="$CFLAGS -O0"
+	fi
+])
+
+AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug],
+			[enable compiling with debugging information]), [
+	if (test "${enableval}" = "yes" &&
+				test "${ac_cv_prog_cc_g}" = "yes"); then
+		CFLAGS="$CFLAGS -g"
+	fi
+])
+
+AC_ARG_ENABLE(pie, AC_HELP_STRING([--enable-pie],
+			[enable position independent executables flag]), [
+	if (test "${enableval}" = "yes" &&
+				test "${ac_cv_prog_cc_pie}" = "yes"); then
+		CFLAGS="$CFLAGS -fPIE"
+		LDFLAGS="$LDFLAGS -pie"
+	fi
+])
+
+AC_ARG_ENABLE(threads,
+	AC_HELP_STRING([--enable-threads], [enable threading support]),
+			[enable_threads=${enableval}], [enable_threads="no"])
+
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, dummy=yes,
+				AC_MSG_ERROR(GLib >= 2.16 is required))
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
+
+if (test "${enable_threads}" = "yes"); then
+	AC_DEFINE(NEED_THREADS, 1, [Define if threading support is required])
+	PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.16, dummy=yes,
+				AC_MSG_ERROR(GThread >= 2.16 is required))
+	GLIB_CFLAGS="$GLIB_CFLAGS $GTHREAD_CFLAGS"
+	GLIB_LIBS="$GLIB_LIBS $GTHREAD_LIBS"
+fi
+
+AC_ARG_ENABLE(capng, AC_HELP_STRING([--enable-capng],
+		[enable capabilities support]), [enable_capng=${enableval}])
+if (test "${enable_capng}" = "yes"); then
+	PKG_CHECK_MODULES(CAPNG, libcap-ng, dummy=yes,
+				AC_MSG_ERROR(Capabilities library is required))
+	AC_SUBST(CAPNG_CFLAGS)
+	AC_SUBST(CAPNG_LIBS)
+	AC_DEFINE(HAVE_CAPNG, 1, [Define to 1 if you have capabilities library.])
+fi
+
+AC_ARG_ENABLE(datafiles, AC_HELP_STRING([--disable-datafiles],
+			[don't install configuration and data files]),
+					[enable_datafiles=${enableval}])
+AM_CONDITIONAL(DATAFILES, test "${enable_datafiles}" != "no")
+
+AC_OUTPUT(Makefile)
