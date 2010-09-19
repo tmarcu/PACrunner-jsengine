@@ -39,13 +39,6 @@
 
 static GMainLoop *main_loop = NULL;
 
-static gboolean test_execute(gpointer user_data)
-{
-	__pacrunner_mozjs_execute("http://www.pacrunner.org/", "localhost");
-
-	return FALSE;
-}
-
 static volatile sig_atomic_t __terminated = 0;
 
 static void sig_term(int sig)
@@ -164,9 +157,8 @@ int main(int argc, char *argv[])
 
 	__pacrunner_log_init(option_debug, option_detach);
 
+	__pacrunner_client_init(conn);
 	__pacrunner_mozjs_init();
-
-	g_idle_add(test_execute, NULL);
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = sig_term;
@@ -176,6 +168,7 @@ int main(int argc, char *argv[])
 	g_main_loop_run(main_loop);
 
 	__pacrunner_mozjs_cleanup();
+	__pacrunner_client_cleanup();
 
 	__pacrunner_log_cleanup();
 

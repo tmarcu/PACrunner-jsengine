@@ -73,7 +73,7 @@ static JSClass jscls = {
 static JSRuntime *jsrun;
 static JSContext *jsctx;
 
-void __pacrunner_mozjs_execute(const char *url, const char *host)
+const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 {
 	JSObject *jsobj;
 	JSBool result;
@@ -104,13 +104,15 @@ void __pacrunner_mozjs_execute(const char *url, const char *host)
 	result = JS_CallFunctionName(jsctx, jsobj, "FindProxyForURL",
 							2, args, &rval);
 
-	if (result) {
-		answer = JS_GetStringBytes(JS_ValueToString(jsctx, rval));
-		pacrunner_info("PAC result = %s", answer);
-	}
-
 	JS_free(jsctx, tmphost);
 	JS_free(jsctx, tmpurl);
+
+	if (result) {
+		answer = JS_GetStringBytes(JS_ValueToString(jsctx, rval));
+		return answer;
+	}
+
+	return NULL;
 }
 
 int __pacrunner_mozjs_init(void)

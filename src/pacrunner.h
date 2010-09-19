@@ -19,9 +19,15 @@
  *
  */
 
+#include <dbus/dbus.h>
 #include <glib.h>
 
 #define PACRUNNER_SERVICE	"org.pacrunner"
+
+#define PACRUNNER_ERROR_INTERFACE	PACRUNNER_SERVICE ".Error"
+
+#define PACRUNNER_CLIENT_INTERFACE	PACRUNNER_SERVICE ".Client"
+#define PACRUNNER_CLIENT_PATH		"/org/pacrunner/client"
 
 
 void pacrunner_info(const char *format, ...)
@@ -55,6 +61,9 @@ int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
 
 
+int __pacrunner_client_init(DBusConnection *conn);
+void __pacrunner_client_cleanup();
+
 int __pacrunner_mozjs_init(void);
 void __pacrunner_mozjs_cleanup(void);
-void __pacrunner_mozjs_execute(const char *url, const char *host);
+const char *__pacrunner_mozjs_execute(const char *url, const char *host);

@@ -95,6 +95,10 @@ if (test "${enable_threads}" = "yes"); then
 	GLIB_LIBS="$GLIB_LIBS $GTHREAD_LIBS"
 fi
 
+AC_ARG_ENABLE(test, AC_HELP_STRING([--enable-test],
+		[enable test/example scripts]), [enable_test=${enableval}])
+AM_CONDITIONAL(TEST, test "${enable_test}" = "yes")
+
 AC_ARG_ENABLE(datafiles, AC_HELP_STRING([--disable-datafiles],
 			[don't install configuration and data files]),
 					[enable_datafiles=${enableval}])

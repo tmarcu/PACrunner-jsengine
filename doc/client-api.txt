@@ -1,0 +1,8 @@
+Client hierarchy
+================
+
+Service		org.pacrunner
+Interface	org.pacrunner.Client
+Object path	/org/pacrunner/client
+
+Methods		string FindProxyForURL(string url, string host)
