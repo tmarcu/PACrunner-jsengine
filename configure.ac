@@ -69,6 +69,7 @@ AC_CHECK_LIB(dbus-1, dbus_watch_get_unix_fd, dummy=yes,
 AC_SUBST(DBUS_CFLAGS)
 AC_SUBST(DBUS_LIBS)
 
+
 AC_ARG_WITH(dbusconf, AC_HELP_STRING([--with-dbusconf=PATH],
 	[path to D-Bus config directory]), [path_dbusconf=${withval}],
 		[path_dbusconf="`$PKG_CONFIG --variable=sysconfdir dbus-1`"])
@@ -88,6 +89,12 @@ if (test "${enable_capng}" = "yes"); then
 	AC_SUBST(CAPNG_LIBS)
 	AC_DEFINE(HAVE_CAPNG, 1, [Define to 1 if you have capabilities library.])
 fi
+
+PKG_CHECK_MODULES(XUL, libxul >= 1.9, dummy=yes,
+                                AC_MSG_ERROR(XUL Runtime >= 1.9 is required))
+XUL_LIBS="`$PKG_CONFIG --libs-only-L libxul` -lmozjs"
+AC_SUBST(XUL_CFLAGS)
+AC_SUBST(XUL_LIBS)
 
 AC_ARG_ENABLE(datafiles, AC_HELP_STRING([--disable-datafiles],
 			[don't install configuration and data files]),

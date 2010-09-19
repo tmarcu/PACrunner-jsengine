@@ -53,3 +53,8 @@ struct pacrunner_debug_desc {
 
 int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
+
+
+int __pacrunner_mozjs_init(void);
+void __pacrunner_mozjs_cleanup(void);
+void __pacrunner_mozjs_execute(const char *url, const char *host);

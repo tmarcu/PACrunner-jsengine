@@ -13,11 +13,11 @@ gdbus_sources = gdbus/gdbus.h gdbus/mainloop.c gdbus/watch.c \
 sbin_PROGRAMS = src/pacrunner
 
 src_pacrunner_SOURCES = $(gdbus_sources) \
-			src/main.c src/pacrunner.h src/log.c
+			src/main.c src/pacrunner.h src/log.c src/mozjs.c
 
-src_pacrunner_LDADD = @GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
+src_pacrunner_LDADD = @XUL_LIBS@ @GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
 
-AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@
+AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ @XUL_CFLAGS@
 
 INCLUDES = -I$(builddir)/src -I$(builddir)/gdbus
 
