@@ -46,6 +46,13 @@ static void sig_term(int sig)
 	g_main_loop_quit(main_loop);
 }
 
+static void disconnect_callback(DBusConnection *conn, void *user_data)
+{
+	pacrunner_error("D-Bus disconnect");
+
+	g_main_loop_quit(main_loop);
+}
+
 static gchar *option_debug = NULL;
 static gboolean option_detach = TRUE;
 static gboolean option_version = FALSE;
@@ -77,6 +84,8 @@ int main(int argc, char *argv[])
 {
 	GOptionContext *context;
 	GError *error = NULL;
+	DBusConnection *conn;
+	DBusError err;
 	struct sigaction sa;
 
 #ifdef HAVE_CAPNG
@@ -125,6 +134,20 @@ int main(int argc, char *argv[])
 	}
 #endif
 
+	dbus_error_init(&err);
+
+	conn = g_dbus_setup_bus(DBUS_BUS_SYSTEM, PACRUNNER_SERVICE, &err);
+	if (conn == NULL) {
+		if (dbus_error_is_set(&err) == TRUE) {
+			fprintf(stderr, "%s\n", err.message);
+			dbus_error_free(&err);
+		} else
+			fprintf(stderr, "Can't register with system bus\n");
+		exit(1);
+	}
+
+	g_dbus_set_disconnect_function(conn, disconnect_callback, NULL, NULL);
+
 	__pacrunner_log_init(option_debug, option_detach);
 
 	DBG("");
@@ -137,6 +160,8 @@ int main(int argc, char *argv[])
 	g_main_loop_run(main_loop);
 
 	__pacrunner_log_cleanup();
+
+	dbus_connection_unref(conn);
 
 	g_main_loop_unref(main_loop);
 

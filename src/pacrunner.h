@@ -21,6 +21,9 @@
 
 #include <glib.h>
 
+#define PACRUNNER_SERVICE	"org.pacrunner"
+
+
 void pacrunner_info(const char *format, ...)
 				__attribute__((format(printf, 1, 2)));
 void pacrunner_warn(const char *format, ...)

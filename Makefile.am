@@ -19,7 +19,7 @@ src_pacrunner_LDADD = @GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
 
 AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@
 
-INCLUDES = -I$(builddir)/src
+INCLUDES = -I$(builddir)/src -I$(builddir)/gdbus
 
 EXTRA_DIST = src/pacrunner.conf
 
