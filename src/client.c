@@ -44,8 +44,9 @@ static DBusMessage *find_proxy_for_url(DBusConnection *conn,
 
 	result = __pacrunner_mozjs_execute(url, host);
 	if (result == NULL)
-		g_dbus_create_error(msg, PACRUNNER_ERROR_INTERFACE ".Failed",
-							"PAC excution failed");
+		return g_dbus_create_error(msg,
+					PACRUNNER_ERROR_INTERFACE ".Failed",
+							"PAC execution failed");
 
 	DBG("result %s", result);
 
