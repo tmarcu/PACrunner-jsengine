@@ -30,7 +30,7 @@ test_SCRIPTS = $(test_scripts)
 endif
 
 EXTRA_DIST = src/pacrunner.conf $(test_scripts) \
-			doc/manager-api.txt doc/client-api.txt
+		doc/architecture.txt doc/manager-api.txt doc/client-api.txt
 
 DISTCHECK_CONFIGURE_FLAGS = --disable-datafiles
 
