@@ -83,5 +83,5 @@ For production installations or distribution packaging it is important that
 the "--enable-maintainer-mode" option is NOT used.
 
 The debugging option -d takes an argument. This argument can be a comma
-separated list of file names like 'src/main.c,src/test.c' to enable debugs
+separated list of file names like 'src/main.c,src/client.c' to enable debugs
 in these files. Simple glob style pattern matching is supported in this list.
