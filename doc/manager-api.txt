@@ -7,4 +7,34 @@ Object path	/org/pacrunner/manager
 
 Methods		object CreateProxyConfiguration(dict settings)
 
+			This method allows system daemons handling Internet
+			connections and that also use Web Proxy Autodiscovery
+			Protocol (WPAD) to configure PAC URLs.
+
+			Valid settings for configuration are these:
+
+			string URL [mandatory]
+
+				URL for the PAC file. The URL must be
+				fully qualified.
+
+				Example: "http://wpad.connman.net/wpad.dat"
+
+			string Domain [optional]
+
+				Domain name for which the URL is valid.
+
+			On successful configuration of this method returns
+			an object path that uniquely identifies this specific
+			configuration.
+
 		void DestroyProxyConfiguration(object config)
+
+			This method allows to remove a previously configured
+			proxy configuration. The object path to use is the
+			one returned from CreateProxyConfiguration.
+
+			A proxy configuration is only valid for the lifetime
+			of the application creating it. In case it disconnects
+			from the bus, the configuration will be automatically
+			removed.
