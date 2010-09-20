@@ -73,4 +73,6 @@ void __pacrunner_client_cleanup();
 
 int __pacrunner_mozjs_init(void);
 void __pacrunner_mozjs_cleanup(void);
+int __pacrunner_mozjs_load(const char *url);
+void __pacrunner_mozjs_clear(void);
 const char *__pacrunner_mozjs_execute(const char *url, const char *host);

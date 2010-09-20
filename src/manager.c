@@ -49,6 +49,8 @@ static void destroy_config(gpointer data)
 
 	DBG("path %s", config->path);
 
+	__pacrunner_mozjs_clear();
+
 	if (config->watch > 0)
 		g_dbus_remove_watch(config->conn, config->watch);
 
@@ -94,6 +96,9 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	config->conn = conn;
 	config->watch = g_dbus_add_disconnect_watch(conn, sender,
 					disconnect_callback, config, NULL);
+
+	if (__pacrunner_mozjs_load(config->url) < 0)
+		pacrunner_error("Failed to load PAC");
 
 	return config;
 }

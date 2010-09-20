@@ -12,9 +12,10 @@ gdbus_sources = gdbus/gdbus.h gdbus/mainloop.c gdbus/watch.c \
 
 sbin_PROGRAMS = src/pacrunner
 
-src_pacrunner_SOURCES = $(gdbus_sources) \
-			src/main.c src/pacrunner.h src/log.c \
-			src/manager.c src/client.c src/mozjs.c
+src_pacrunner_SOURCES = $(gdbus_sources) src/pacrunner.h \
+					src/main.c src/log.c \
+					src/manager.c src/client.c \
+					src/mozjs.c src/javascript.h
 
 src_pacrunner_LDADD = @XUL_LIBS@ @GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
 
