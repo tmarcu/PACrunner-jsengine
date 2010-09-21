@@ -61,13 +61,23 @@ AC_CHECK_LIB(dbus-1, dbus_watch_get_unix_fd, dummy=yes,
 AC_SUBST(DBUS_CFLAGS)
 AC_SUBST(DBUS_LIBS)
 
-AC_ARG_WITH(dbusconf, AC_HELP_STRING([--with-dbusconf=PATH],
+AC_ARG_WITH(dbusconfdir, AC_HELP_STRING([--with-dbusconfdir=PATH],
 	[path to D-Bus config directory]), [path_dbusconf=${withval}],
 		[path_dbusconf="`$PKG_CONFIG --variable=sysconfdir dbus-1`"])
 if (test -z "${path_dbusconf}"); then
-	DBUS_DATADIR="${sysconfdir}/dbus-1/system.d"
+	DBUS_CONFDIR="${sysconfdir}/dbus-1/system.d"
 else
-	DBUS_DATADIR="${path_dbusconf}/dbus-1/system.d"
+	DBUS_CONFDIR="${path_dbusconf}/dbus-1/system.d"
+fi
+AC_SUBST(DBUS_CONFDIR)
+
+AC_ARG_WITH(dbusdatadir, AC_HELP_STRING([--with-dbusdatadir=PATH],
+	[path to D-Bus data directory]), [path_dbusdata=${withval}],
+		[path_dbusdata="`$PKG_CONFIG --variable=datadir dbus-1`"])
+if (test -z "${path_dbusdata}"); then
+	DBUS_DATADIR="${datadir}/dbus-1/system-services"
+else
+	DBUS_DATADIR="${path_dbusdata}/dbus-1/system-services"
 fi
 AC_SUBST(DBUS_DATADIR)
 
@@ -104,4 +114,4 @@ AC_ARG_ENABLE(datafiles, AC_HELP_STRING([--disable-datafiles],
 					[enable_datafiles=${enableval}])
 AM_CONDITIONAL(DATAFILES, test "${enable_datafiles}" != "no")
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile src/pacrunner.service)

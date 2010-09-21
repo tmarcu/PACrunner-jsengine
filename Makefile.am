@@ -2,9 +2,13 @@
 AM_MAKEFLAGS = --no-print-directory
 
 if DATAFILES
-dbusdir = @DBUS_DATADIR@
+dbusconfdir = @DBUS_CONFDIR@
 
-dbus_DATA = src/pacrunner.conf
+dbusconf_DATA = src/pacrunner.conf
+
+dbusdatadir = @DBUS_DATADIR@
+
+dbusdata_DATA = src/pacrunner.service
 endif
 
 gdbus_sources = gdbus/gdbus.h gdbus/mainloop.c gdbus/watch.c \
