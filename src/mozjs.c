@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #include <jsapi.h>
 
@@ -95,14 +97,46 @@ void __pacrunner_mozjs_clear(void)
 	current_pacfile = NULL;
 }
 
+static int resolve(const char *node, char *host, size_t hostlen)
+{
+	struct addrinfo *info;
+	int err;
+
+	if (getaddrinfo(node, NULL, NULL, &info) < 0)
+		return -EIO;
+
+	err = getnameinfo(info->ai_addr, info->ai_addrlen,
+				host, hostlen, NULL, 0, NI_NUMERICHOST);
+
+	freeaddrinfo(info);
+
+	if (err < 0)
+		return -EIO;
+
+	return 0;
+}
+
 static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 						jsval *argv, jsval *rval)
 {
-	char *addr = JS_strdup(ctx, "192.168.0.1");
+	char hostname[HOST_NAME_MAX];
+	char address[NI_MAXHOST];
 
 	DBG("");
 
-	*rval = STRING_TO_JSVAL(JS_NewString(ctx, addr, strlen(addr)));
+	*rval = JSVAL_NULL;
+
+	if (gethostname(hostname, sizeof(hostname)) < 0)
+		return TRUE;
+
+	DBG("hostname %s", hostname);
+
+	if (resolve(hostname, address, sizeof(address)) < 0)
+		return TRUE;
+
+	DBG("address %s", address);
+
+	*rval = STRING_TO_JSVAL(JS_NewString(ctx, address, strlen(address)));
 
 	return TRUE;
 }
@@ -110,14 +144,19 @@ static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 static JSBool dnsresolve(JSContext *ctx, JSObject *obj, uintN argc,
 						jsval *argv, jsval *rval)
 {
-	char *host = JS_strdup(ctx,
-			JS_GetStringBytes(JS_ValueToString(ctx, argv[0])));
+	char address[NI_MAXHOST];
+	char *host = JS_GetStringBytes(JS_ValueToString(ctx, argv[0]));
 
 	DBG("host %s", host);
 
 	*rval = JSVAL_NULL;
 
-	JS_free(ctx, host);
+	if (resolve(host, address, sizeof(address)) < 0)
+		return TRUE;
+
+	DBG("address %s", address);
+
+	*rval = STRING_TO_JSVAL(JS_NewString(ctx, address, strlen(address)));
 
 	return TRUE;
 }
