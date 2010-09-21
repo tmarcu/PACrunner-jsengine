@@ -41,13 +41,8 @@
 
 #include "pacrunner.h"
 
-#define DEFAULT_PACFILE \
-	"function FindProxyForURL(url, host) {\n" \
-	"  return \"DIRECT\";\n" \
-	"}"
-
-static char *current_pacfile = NULL;
 static char *current_interface = NULL;
+static char *current_pacfile = NULL;
 
 int __pacrunner_mozjs_load(const char *interface, const char *url)
 {
@@ -204,9 +199,11 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	JSBool result;
 	jsval rval, args[2];
 	char *answer, *tmpurl, *tmphost;
-	const char *pacfile;
 
 	DBG("url %s host %s", url, host);
+
+	if (current_pacfile == NULL)
+		return "DIRECT";
 
 	jsobj = JS_NewObject(jsctx, &jscls, NULL, NULL);
 
@@ -219,9 +216,8 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	JS_EvaluateScript(jsctx, jsobj, JAVASCRIPT_ROUTINES,
 			strlen(JAVASCRIPT_ROUTINES), "javascript.js", 0, &rval);
 
-	pacfile = current_pacfile ? current_pacfile : DEFAULT_PACFILE;
-
-	JS_EvaluateScript(jsctx, jsobj, pacfile, strlen(pacfile),
+	JS_EvaluateScript(jsctx, jsobj,
+				current_pacfile, strlen(current_pacfile),
 						"wpad.dat", 0, &rval);
 
 	tmpurl = JS_strdup(jsctx, url);
