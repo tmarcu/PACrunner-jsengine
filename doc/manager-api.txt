@@ -20,6 +20,11 @@ Methods		object CreateProxyConfiguration(dict settings)
 
 				Example: "http://wpad.connman.net/wpad.dat"
 
+			string Interface [optional]
+
+				Interface name like "wlan0" etc. to provide
+				consistent results for myIpAddress function.
+
 			string Domain [optional]
 
 				Domain name for which the URL is valid.

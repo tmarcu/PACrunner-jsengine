@@ -36,6 +36,7 @@ struct proxy_config {
 	guint watch;
 
 	char *url;
+	char *interface;
 	char *domain;
 };
 
@@ -55,6 +56,7 @@ static void destroy_config(gpointer data)
 		g_dbus_remove_watch(config->conn, config->watch);
 
 	g_free(config->domain);
+	g_free(config->interface);
 	g_free(config->url);
 
 	g_free(config->sender);
@@ -74,9 +76,8 @@ static void disconnect_callback(DBusConnection *conn, void *user_data)
 }
 
 static struct proxy_config *create_config(DBusConnection *conn,
-						const char *sender,
-						const char *url,
-						const char *domain)
+				const char *sender, const char *url,
+				const char *interface,  const char *domain)
 {
 	struct proxy_config *config;
 
@@ -89,6 +90,7 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	config->sender = g_strdup(sender);
 
 	config->url = g_strdup(url);
+	config->interface = g_strdup(interface);
 	config->domain = g_strdup(domain);
 
 	DBG("path %s", config->path);
@@ -97,7 +99,7 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	config->watch = g_dbus_add_disconnect_watch(conn, sender,
 					disconnect_callback, config, NULL);
 
-	if (__pacrunner_mozjs_load(config->url) < 0)
+	if (__pacrunner_mozjs_load(config->interface, config->url) < 0)
 		pacrunner_error("Failed to load PAC");
 
 	return config;
@@ -108,7 +110,7 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 {
 	DBusMessageIter iter, array;
 	struct proxy_config *config;
-	const char *sender, *url = NULL, *domain = NULL;
+	const char *sender, *url = NULL, *interface = NULL, *domain = NULL;
 
 	sender = dbus_message_get_sender(msg);
 
@@ -131,6 +133,10 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 				dbus_message_iter_get_basic(&value, &url);
 				if (strlen(url) == 0)
 					url = NULL;
+			} else if (g_str_equal(key, "Interface") == TRUE) {
+				dbus_message_iter_get_basic(&value, &interface);
+				if (strlen(interface) == 0)
+					interface = NULL;
 			} else if (g_str_equal(key, "Domain") == TRUE) {
 				dbus_message_iter_get_basic(&value, &domain);
 				if (strlen(domain) == 0)
@@ -142,14 +148,15 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 		dbus_message_iter_next(&array);
 	}
 
-	DBG("sender %s url %s domain %s", sender, url, domain);
+	DBG("sender %s url %s interface %s domain %s",
+					sender, url, interface, domain);
 
 	if (url == NULL)
 		return g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"Missing URL in configuration");
 
-	config = create_config(conn, sender, url, domain); 
+	config = create_config(conn, sender, url, interface, domain);
 	if (config == NULL)
 		return g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",

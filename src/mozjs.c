@@ -43,14 +43,18 @@
 	"}"
 
 static char *current_pacfile = NULL;
+static char *current_interface = NULL;
 
-int __pacrunner_mozjs_load(const char *url)
+int __pacrunner_mozjs_load(const char *interface, const char *url)
 {
 	const char *filename;
 	struct stat st;
 	int fd;
 
-	DBG("url %s", url);
+	DBG("interface %s url %s", interface, url);
+
+	g_free(current_interface);
+	current_interface = g_strdup(interface);
 
 	g_free(current_pacfile);
 	current_pacfile = NULL;
@@ -232,6 +236,9 @@ int __pacrunner_mozjs_init(void)
 void __pacrunner_mozjs_cleanup(void)
 {
 	DBG("");
+
+	g_free(current_interface);
+	current_interface = NULL;
 
 	g_free(current_pacfile);
 	current_pacfile = NULL;
