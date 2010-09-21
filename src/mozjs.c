@@ -28,8 +28,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
+
 #include <netdb.h>
+#include <arpa/inet.h>
+#include <linux/if_arp.h>
 
 #include <jsapi.h>
 
@@ -101,6 +105,31 @@ void __pacrunner_mozjs_clear(void)
 	current_pacfile = NULL;
 }
 
+static int getaddr(const char *node, char *host, size_t hostlen)
+{
+	struct sockaddr_in addr;
+	struct ifreq ifr;
+	int sk, err;
+
+	sk = socket(PF_INET, SOCK_DGRAM, 0);
+	if (sk < 0)
+		return -EIO;
+
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy(ifr.ifr_name, node, sizeof(ifr.ifr_name));
+
+	err = ioctl(sk, SIOCGIFADDR, &ifr);
+
+	close(sk);
+
+	if (err < 0)
+		return -EIO;
+
+	memcpy(&addr, &ifr.ifr_addr, sizeof(addr));
+	snprintf(host, hostlen, "%s", inet_ntoa(addr.sin_addr));
+
+	return 0;
+}
 static int resolve(const char *node, char *host, size_t hostlen)
 {
 	struct addrinfo *info;
@@ -123,19 +152,13 @@ static int resolve(const char *node, char *host, size_t hostlen)
 static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 						jsval *argv, jsval *rval)
 {
-	char hostname[HOST_NAME_MAX];
 	char address[NI_MAXHOST];
 
 	DBG("");
 
 	*rval = JSVAL_NULL;
 
-	if (gethostname(hostname, sizeof(hostname)) < 0)
-		return TRUE;
-
-	DBG("hostname %s", hostname);
-
-	if (resolve(hostname, address, sizeof(address)) < 0)
+	if (getaddr(current_interface, address, sizeof(address)) < 0)
 		return TRUE;
 
 	DBG("address %s", address);
