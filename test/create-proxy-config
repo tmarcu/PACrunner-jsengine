@@ -5,7 +5,7 @@ import time
 import dbus
 
 if (len(sys.argv) < 2):
-	print "Usage: %s <url> [domain]" % (sys.argv[0])
+	print "Usage: %s <url> [interface]" % (sys.argv[0])
 	sys.exit(1)
 
 bus = dbus.SystemBus()
@@ -16,11 +16,12 @@ manager = dbus.Interface(bus.get_object('org.pacrunner',
 url = sys.argv[1]
 
 if (len(sys.argv) > 2):
-	domain = sys.argv[2]
+	interface = sys.argv[2]
 else:
-	domain = ""
+	interface = ""
 
-path = manager.CreateProxyConfiguration( { "URL" : url, "Domain" : domain } )
+path = manager.CreateProxyConfiguration( { "Method" : "auto", "URL" : url,
+						"Interface" : interface } )
 
 print "Proxy configuration: %s" % (path)
 
