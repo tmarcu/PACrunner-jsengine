@@ -25,7 +25,7 @@ src_pacrunner_LDADD = @XUL_LIBS@ @GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
 
 AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ @XUL_CFLAGS@
 
-INCLUDES = -I$(builddir)/src -I$(builddir)/gdbus
+INCLUDES = -I$(srcdir)/src -I$(srcdir)/gdbus
 
 test_scripts = test/find-proxy-for-url test/create-proxy-config
 
