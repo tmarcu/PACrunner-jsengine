@@ -106,7 +106,7 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	config->watch = g_dbus_add_disconnect_watch(conn, sender,
 					disconnect_callback, config, NULL);
 
-	if (g_strcmp0(method, "auto") == 0) {
+	if (g_strcmp0(method, "auto") == 0 && config->url != NULL) {
 		if (__pacrunner_mozjs_load(config->interface, config->url) < 0)
 			pacrunner_error("Failed to load PAC");
 	}

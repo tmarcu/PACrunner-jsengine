@@ -51,7 +51,7 @@ int __pacrunner_mozjs_load(const char *interface, const char *url)
 	int fd;
 
 	if (url == NULL)
-		return 0;
+		return -EINVAL;
 
 	DBG("interface %s url %s", interface, url);
 
