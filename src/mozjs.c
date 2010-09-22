@@ -156,6 +156,9 @@ static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 
 	*rval = JSVAL_NULL;
 
+	if (current_interface == NULL)
+		return TRUE;
+
 	if (getaddr(current_interface, address, sizeof(address)) < 0)
 		return TRUE;
 
