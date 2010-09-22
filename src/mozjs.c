@@ -50,6 +50,9 @@ int __pacrunner_mozjs_load(const char *interface, const char *url)
 	struct stat st;
 	int fd;
 
+	if (url == NULL)
+		return 0;
+
 	DBG("interface %s url %s", interface, url);
 
 	g_free(current_interface);

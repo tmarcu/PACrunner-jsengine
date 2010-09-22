@@ -37,7 +37,8 @@ struct proxy_config {
 
 	char *url;
 	char *interface;
-	char *domain;
+	char *domainname;
+	char *nameserver;
 };
 
 static unsigned int next_config_number = 0;
@@ -55,7 +56,8 @@ static void destroy_config(gpointer data)
 	if (config->watch > 0)
 		g_dbus_remove_watch(config->conn, config->watch);
 
-	g_free(config->domain);
+	g_free(config->nameserver);
+	g_free(config->domainname);
 	g_free(config->interface);
 	g_free(config->url);
 
@@ -77,7 +79,9 @@ static void disconnect_callback(DBusConnection *conn, void *user_data)
 
 static struct proxy_config *create_config(DBusConnection *conn,
 				const char *sender, const char *url,
-				const char *interface,  const char *domain)
+						const char *interface,
+						const char *domainname,
+						const char *nameserver)
 {
 	struct proxy_config *config;
 
@@ -91,7 +95,8 @@ static struct proxy_config *create_config(DBusConnection *conn,
 
 	config->url = g_strdup(url);
 	config->interface = g_strdup(interface);
-	config->domain = g_strdup(domain);
+	config->domainname = g_strdup(domainname);
+	config->nameserver = g_strdup(nameserver);
 
 	DBG("path %s", config->path);
 
@@ -110,7 +115,8 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 {
 	DBusMessageIter iter, array;
 	struct proxy_config *config;
-	const char *sender, *url = NULL, *interface = NULL, *domain = NULL;
+	const char *sender, *url = NULL;
+	const char *interface = NULL, *domainname = NULL, *nameserver = NULL;
 
 	sender = dbus_message_get_sender(msg);
 
@@ -137,26 +143,19 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 				dbus_message_iter_get_basic(&value, &interface);
 				if (strlen(interface) == 0)
 					interface = NULL;
-			} else if (g_str_equal(key, "Domain") == TRUE) {
-				dbus_message_iter_get_basic(&value, &domain);
-				if (strlen(domain) == 0)
-					domain = NULL;
 			}
+			break;
+		case DBUS_TYPE_ARRAY:
 			break;
 		}
 
 		dbus_message_iter_next(&array);
 	}
 
-	DBG("sender %s url %s interface %s domain %s",
-					sender, url, interface, domain);
+	DBG("sender %s url %s interface %s", sender, url, interface);
 
-	if (url == NULL)
-		return g_dbus_create_error(msg,
-					PACRUNNER_ERROR_INTERFACE ".Failed",
-					"Missing URL in configuration");
-
-	config = create_config(conn, sender, url, interface, domain);
+	config = create_config(conn, sender, url,
+				interface, domainname, nameserver);
 	if (config == NULL)
 		return g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
