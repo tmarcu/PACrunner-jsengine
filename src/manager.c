@@ -78,7 +78,9 @@ static void disconnect_callback(DBusConnection *conn, void *user_data)
 }
 
 static struct proxy_config *create_config(DBusConnection *conn,
-				const char *sender, const char *url,
+						const char *sender,
+						const char *method,
+						const char *url,
 						const char *interface,
 						const char *domainname,
 						const char *nameserver)
@@ -104,8 +106,10 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	config->watch = g_dbus_add_disconnect_watch(conn, sender,
 					disconnect_callback, config, NULL);
 
-	if (__pacrunner_mozjs_load(config->interface, config->url) < 0)
-		pacrunner_error("Failed to load PAC");
+	if (g_strcmp0(method, "auto") == 0) {
+		if (__pacrunner_mozjs_load(config->interface, config->url) < 0)
+			pacrunner_error("Failed to load PAC");
+	}
 
 	return config;
 }
@@ -115,7 +119,7 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 {
 	DBusMessageIter iter, array;
 	struct proxy_config *config;
-	const char *sender, *url = NULL;
+	const char *sender, *method = NULL, *url = NULL;
 	const char *interface = NULL, *domainname = NULL, *nameserver = NULL;
 
 	sender = dbus_message_get_sender(msg);
@@ -135,7 +139,11 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 
 		switch (dbus_message_iter_get_arg_type(&value)) {
 		case DBUS_TYPE_STRING:
-			if (g_str_equal(key, "URL") == TRUE) {
+			if (g_str_equal(key, "Method") == TRUE) {
+				dbus_message_iter_get_basic(&value, &method);
+				if (strlen(method) == 0)
+					method = NULL;
+			} else if (g_str_equal(key, "URL") == TRUE) {
 				dbus_message_iter_get_basic(&value, &url);
 				if (strlen(url) == 0)
 					url = NULL;
@@ -152,9 +160,15 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 		dbus_message_iter_next(&array);
 	}
 
-	DBG("sender %s url %s interface %s", sender, url, interface);
+	DBG("sender %s method %s url %s", sender, method, url);
+	DBG("interface %s", interface);
 
-	config = create_config(conn, sender, url,
+	if (method == NULL)
+		return g_dbus_create_error(msg,
+					PACRUNNER_ERROR_INTERFACE ".Failed",
+					"No proxy method specified");
+
+	config = create_config(conn, sender, method, url,
 				interface, domainname, nameserver);
 	if (config == NULL)
 		return g_dbus_create_error(msg,

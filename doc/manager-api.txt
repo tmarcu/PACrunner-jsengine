@@ -13,7 +13,23 @@ Methods		object CreateProxyConfiguration(dict settings)
 
 			Valid settings for configuration are these:
 
-			string URL [mandatory]
+			string Method [mandatory]
+
+				The method of proxy configuration. Valid
+				values are "direct", "manual" and "auto".
+
+				For "direct" no proxy is used. Using this
+				value just allows for reference configuration
+				since it makes no difference compared to not
+				having any proxy settings at all.
+
+				The "auto" configuration requires to have
+				the URL setting filled in and be valud.
+
+				Support for "manual" configuration is
+				currently still missing.
+
+			string URL [optional]
 
 				URL for the PAC file. The URL must be
 				fully qualified.
@@ -25,9 +41,16 @@ Methods		object CreateProxyConfiguration(dict settings)
 				Interface name like "wlan0" etc. to provide
 				consistent results for myIpAddress function.
 
-			string Domain [optional]
+			array{string} Domains [optional]
 
-				Domain name for which the URL is valid.
+				Domain names for which the URL is valid.
+
+			array{string} Nameservers [optional]
+
+				List of nameservers for this configuration.
+
+				This value is needed for dnsResolve function
+				in PAC files.
 
 			On successful configuration of this method returns
 			an object path that uniquely identifies this specific
