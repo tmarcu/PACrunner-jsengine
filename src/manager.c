@@ -162,7 +162,7 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 
 			if (g_str_equal(key, "Domains") == TRUE) {
 				dbus_message_iter_get_basic(&list, &domainname);
-				if (strlen(nameserver) == 0)
+				if (strlen(domainname) == 0)
 					domainname = NULL;
 			} else if (g_str_equal(key, "Nameservers") == TRUE) {
 				dbus_message_iter_get_basic(&list, &nameserver);
