@@ -128,7 +128,7 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 	dbus_message_iter_recurse(&iter, &array);
 
 	while (dbus_message_iter_get_arg_type(&array) == DBUS_TYPE_DICT_ENTRY) {
-		DBusMessageIter entry, value;
+		DBusMessageIter entry, value, list;
 		const char *key;
 
 		dbus_message_iter_recurse(&array, &entry);
@@ -154,6 +154,21 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 			}
 			break;
 		case DBUS_TYPE_ARRAY:
+			dbus_message_iter_recurse(&value, &list);
+
+			if (dbus_message_iter_get_arg_type(&list) ==
+							DBUS_TYPE_INVALID)
+				break;
+
+			if (g_str_equal(key, "Domains") == TRUE) {
+				dbus_message_iter_get_basic(&list, &domainname);
+				if (strlen(nameserver) == 0)
+					domainname = NULL;
+			} else if (g_str_equal(key, "Nameservers") == TRUE) {
+				dbus_message_iter_get_basic(&list, &nameserver);
+				if (strlen(nameserver) == 0)
+					nameserver = NULL;
+			}
 			break;
 		}
 
@@ -161,7 +176,8 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 	}
 
 	DBG("sender %s method %s url %s", sender, method, url);
-	DBG("interface %s", interface);
+	DBG("interface %s domainname %s nameserver %s",
+					interface, domainname, nameserver);
 
 	if (method == NULL)
 		return g_dbus_create_error(msg,
