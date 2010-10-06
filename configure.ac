@@ -91,11 +91,13 @@ if (test "${enable_capng}" = "yes"); then
 	AC_DEFINE(HAVE_CAPNG, 1, [Define to 1 if you have capabilities library.])
 fi
 
-PKG_CHECK_MODULES(XUL, libxul >= 1.9, enable_threads=yes,
+PKG_CHECK_MODULES(MOZJS, mozilla-js >= 1.9, enabled_threads=yes, [
+	PKG_CHECK_MODULES(MOZJS, libxul >= 1.9, enable_threads=yes,
                                 AC_MSG_ERROR(XUL Runtime >= 1.9 is required))
-XUL_LIBS="`$PKG_CONFIG --libs-only-L libxul` -lmozjs"
-AC_SUBST(XUL_CFLAGS)
-AC_SUBST(XUL_LIBS)
+	MOZJS_LIBS="`$PKG_CONFIG --libs-only-L libxul` -lmozjs"
+])
+AC_SUBST(MOZJS_CFLAGS)
+AC_SUBST(MOZJS_LIBS)
 
 if (test "${enable_threads}" = "yes"); then
 	AC_DEFINE(NEED_THREADS, 1, [Define if threading support is required])

@@ -21,9 +21,9 @@ src_pacrunner_SOURCES = $(gdbus_sources) src/pacrunner.h \
 					src/manager.c src/client.c \
 					src/mozjs.c src/javascript.h
 
-src_pacrunner_LDADD = @XUL_LIBS@ @GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
+src_pacrunner_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
 
-AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ @XUL_CFLAGS@
+AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ @MOZJS_CFLAGS@
 
 INCLUDES = -I$(srcdir)/src -I$(srcdir)/gdbus
 
