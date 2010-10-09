@@ -20,6 +20,12 @@ AC_PROG_CC
 AC_PROG_CC_PIE
 AC_PROG_INSTALL
 
+m4_define([_LT_AC_TAGCONFIG], [])
+m4_ifdef([AC_LIBTOOL_TAGS], [AC_LIBTOOL_TAGS([])])
+
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
+
 AC_ARG_ENABLE(optimization, AC_HELP_STRING([--disable-optimization],
 			[disable code optimization through compiler]), [
 	if (test "${enableval}" = "no"); then
@@ -108,9 +114,13 @@ AC_ARG_ENABLE(test, AC_HELP_STRING([--enable-test],
 		[enable test/example scripts]), [enable_test=${enableval}])
 AM_CONDITIONAL(TEST, test "${enable_test}" = "yes")
 
+AC_ARG_ENABLE(libproxy, AC_HELP_STRING([--enable-libproxy],
+	[enable libproxy compatible library]), [enable_libproxy=${enableval}])
+AM_CONDITIONAL(LIBPROXY, test "${enable_libproxy}" = "yes")
+
 AC_ARG_ENABLE(datafiles, AC_HELP_STRING([--disable-datafiles],
 			[don't install configuration and data files]),
 					[enable_datafiles=${enableval}])
 AM_CONDITIONAL(DATAFILES, test "${enable_datafiles}" != "no")
 
-AC_OUTPUT(Makefile src/pacrunner.service)
+AC_OUTPUT(Makefile src/pacrunner.service libproxy/libproxy-1.0.pc)
