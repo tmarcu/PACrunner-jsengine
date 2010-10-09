@@ -97,7 +97,7 @@ if (test "${enable_capng}" = "yes"); then
 	AC_DEFINE(HAVE_CAPNG, 1, [Define to 1 if you have capabilities library.])
 fi
 
-PKG_CHECK_MODULES(MOZJS, mozilla-js >= 1.9, enabled_threads=yes,
+PKG_CHECK_MODULES(MOZJS, mozilla-js >= 1.9, enable_threads=yes,
 			AC_MSG_ERROR(Mozilla Javascript >= 1.9 is required))
 AC_SUBST(MOZJS_CFLAGS)
 AC_SUBST(MOZJS_LIBS)
