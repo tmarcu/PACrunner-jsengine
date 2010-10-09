@@ -27,35 +27,79 @@
 
 #include "pacrunner.h"
 
-static DBusMessage *find_proxy_for_url(DBusConnection *conn,
-					DBusMessage *msg, void *user_data)
+struct jsrun_data {
+	DBusConnection *conn;
+	DBusMessage *msg;
+	GThread *thread;
+};
+
+static void jsrun_free(gpointer data)
 {
+	struct jsrun_data *jsrun = data;
+
+	dbus_message_unref(jsrun->msg);
+	dbus_connection_unref(jsrun->conn);
+	g_free(jsrun);
+}
+
+static gpointer jsrun_thread(gpointer data)
+{
+	struct jsrun_data *jsrun = data;
 	const char *sender, *url, *host, *result;
 
-	sender = dbus_message_get_sender(msg);
+	sender = dbus_message_get_sender(jsrun->msg);
 
 	DBG("sender %s", sender);
 
-	dbus_message_get_args(msg, NULL, DBUS_TYPE_STRING, &url,
+	dbus_message_get_args(jsrun->msg, NULL, DBUS_TYPE_STRING, &url,
 						DBUS_TYPE_STRING, &host,
 							DBUS_TYPE_INVALID);
 
 	DBG("url %s host %s", url, host);
 
 	result = __pacrunner_mozjs_execute(url, host);
-	if (result == NULL)
-		return g_dbus_create_error(msg,
-					PACRUNNER_ERROR_INTERFACE ".Failed",
-							"PAC execution failed");
 
 	DBG("result %s", result);
 
-	return g_dbus_create_reply(msg, DBUS_TYPE_STRING, &result,
+	if (result == NULL)
+		result = "DIRECT";
+
+	g_dbus_send_reply(jsrun->conn, jsrun->msg, DBUS_TYPE_STRING, &result,
 							DBUS_TYPE_INVALID);
+
+	jsrun_free(jsrun);
+
+	return NULL;
+}
+
+static DBusMessage *find_proxy_for_url(DBusConnection *conn,
+					DBusMessage *msg, void *user_data)
+{
+	struct jsrun_data *jsrun;
+
+	jsrun = g_try_new0(struct jsrun_data, 1);
+	if (jsrun == NULL)
+		return g_dbus_create_error(msg,
+					PACRUNNER_ERROR_INTERFACE ".Failed",
+							"Out of memory");
+
+	jsrun->conn = dbus_connection_ref(conn);
+	jsrun->msg = dbus_message_ref(msg);
+
+	jsrun->thread = g_thread_create(jsrun_thread, jsrun, FALSE, NULL);
+	if (jsrun->thread == NULL) {
+		jsrun_free(jsrun);
+		return g_dbus_create_error(msg,
+					PACRUNNER_ERROR_INTERFACE ".Failed",
+						"Thread execution failed");
+	}
+
+	return NULL;
 }
 
 static GDBusMethodTable client_methods[] = {
-	{ "FindProxyForURL", "ss", "s", find_proxy_for_url },
+	{ "FindProxyForURL", "ss", "s", find_proxy_for_url,
+						G_DBUS_METHOD_FLAG_ASYNC  },
 	{ },
 };
 
