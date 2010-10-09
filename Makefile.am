@@ -39,6 +39,12 @@ pkgconfigdir = $(libdir)/pkgconfig
 
 pkgconfig_DATA = libproxy/libproxy-1.0.pc
 endif
+
+bin_PROGRAMS = tools/proxy
+
+tools_proxy_SOURCES = tools/proxy.c
+
+tools_proxy_LDADD = libproxy/libproxy.la
 endif
 
 AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ @MOZJS_CFLAGS@
