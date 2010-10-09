@@ -69,6 +69,8 @@ static gpointer jsrun_thread(gpointer data)
 
 	jsrun_free(jsrun);
 
+	g_thread_exit(NULL);
+
 	return NULL;
 }
 
