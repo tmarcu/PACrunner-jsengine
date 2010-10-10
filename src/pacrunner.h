@@ -65,6 +65,9 @@ int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
 
 
+int __pacrunner_download_init(void);
+void __pacrunner_download_cleanup(void);
+
 int __pacrunner_manager_init(DBusConnection *conn);
 void __pacrunner_manager_cleanup();
 
