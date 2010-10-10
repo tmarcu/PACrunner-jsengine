@@ -45,7 +45,7 @@ void pacrunner_debug(const char *format, ...)
 
 #define DIRECT_PAC	"function FindProxyForURL(url, host)\n"		\
 			"{\n"						\
-			"	return(\"DIRECT\");"			\
+			"	return \"DIRECT\";"			\
 			"}\n"
 
 static void test_single_init(void)
