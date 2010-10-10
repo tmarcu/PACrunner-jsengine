@@ -28,3 +28,4 @@ src/pacrunner
 src/pacrunner.service
 libproxy/libproxy-1.0.pc
 tools/proxy
+unit/test-mozjs

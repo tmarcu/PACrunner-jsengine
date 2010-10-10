@@ -47,6 +47,13 @@ tools_proxy_SOURCES = tools/proxy.c
 tools_proxy_LDADD = libproxy/libproxy.la
 endif
 
+noinst_PROGRAMS = unit/test-mozjs
+
+unit_test_mozjs_SOURCES = unit/test-mozjs.c \
+				src/pacrunner.h src/log.c src/mozjs.c
+
+unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@
+
 AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ @MOZJS_CFLAGS@
 
 INCLUDES = -I$(srcdir)/src -I$(srcdir)/gdbus
