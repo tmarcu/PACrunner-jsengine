@@ -182,18 +182,18 @@ static void destory_object(void)
 	JS_GC(jsctx);
 }
 
-int __pacrunner_mozjs_set(const char *interface, const char *pac)
+int __pacrunner_mozjs_set(const char *interface, const char *script)
 {
-	if (pac == NULL)
+	if (script == NULL)
 		return -EINVAL;
 
-	DBG("interface %s", interface);
+	DBG("interface %s script %p", interface, script);
 
 	g_free(current_interface);
 	current_interface = g_strdup(interface);
 
 	g_free(current_pacfile);
-	current_pacfile = g_strdup(pac);
+	current_pacfile = g_strdup(script);
 
 	create_object();
 
