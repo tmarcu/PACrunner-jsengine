@@ -36,6 +36,7 @@ struct proxy_config {
 	guint watch;
 
 	char *url;
+	char *script;
 	char *interface;
 	char *domainname;
 	char *nameserver;
@@ -59,6 +60,7 @@ static void destroy_config(gpointer data)
 	g_free(config->nameserver);
 	g_free(config->domainname);
 	g_free(config->interface);
+	g_free(config->script);
 	g_free(config->url);
 
 	g_free(config->sender);
@@ -81,6 +83,7 @@ static struct proxy_config *create_config(DBusConnection *conn,
 						const char *sender,
 						const char *method,
 						const char *url,
+						const char *script,
 						const char *interface,
 						const char *domainname,
 						const char *nameserver)
@@ -96,6 +99,7 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	config->sender = g_strdup(sender);
 
 	config->url = g_strdup(url);
+	config->script = g_strdup(script);
 	config->interface = g_strdup(interface);
 	config->domainname = g_strdup(domainname);
 	config->nameserver = g_strdup(nameserver);
@@ -106,7 +110,14 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	config->watch = g_dbus_add_disconnect_watch(conn, sender,
 					disconnect_callback, config, NULL);
 
-	if (g_strcmp0(method, "auto") == 0 && config->url != NULL) {
+	if (g_strcmp0(method, "auto") != 0)
+		return config;
+
+	if (config->script != NULL) {
+		if (__pacrunner_mozjs_set(config->interface,
+						config->script) < 0)
+			pacrunner_error("Failed to set PAC script");
+	} else if (config->url != NULL) {
 		if (__pacrunner_mozjs_load(config->interface, config->url) < 0)
 			pacrunner_error("Failed to load PAC");
 	}
@@ -119,7 +130,7 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 {
 	DBusMessageIter iter, array;
 	struct proxy_config *config;
-	const char *sender, *method = NULL, *url = NULL;
+	const char *sender, *method = NULL, *url = NULL, *script = NULL;
 	const char *interface = NULL, *domainname = NULL, *nameserver = NULL;
 
 	sender = dbus_message_get_sender(msg);
@@ -147,6 +158,10 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 				dbus_message_iter_get_basic(&value, &url);
 				if (strlen(url) == 0)
 					url = NULL;
+			} else if (g_str_equal(key, "Script") == TRUE) {
+				dbus_message_iter_get_basic(&value, &script);
+				if (strlen(script) == 0)
+					script = NULL;
 			} else if (g_str_equal(key, "Interface") == TRUE) {
 				dbus_message_iter_get_basic(&value, &interface);
 				if (strlen(interface) == 0)
@@ -175,7 +190,8 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 		dbus_message_iter_next(&array);
 	}
 
-	DBG("sender %s method %s url %s", sender, method, url);
+	DBG("sender %s method %s url %s script %p",
+					sender, method, url, script);
 	DBG("interface %s domainname %s nameserver %s",
 					interface, domainname, nameserver);
 
@@ -184,7 +200,7 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"No proxy method specified");
 
-	config = create_config(conn, sender, method, url,
+	config = create_config(conn, sender, method, url, script,
 				interface, domainname, nameserver);
 	if (config == NULL)
 		return g_dbus_create_error(msg,

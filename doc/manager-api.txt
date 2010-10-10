@@ -36,6 +36,19 @@ Methods		object CreateProxyConfiguration(dict settings)
 
 				Example: "http://wpad.connman.net/wpad.dat"
 
+			string Script [optional]
+
+				PAC script as text string. The script must
+				be valid Javascript with FindProxyForURL()
+				function.
+
+				Example:
+
+				function FindProxyForURL(url, host)
+				{
+					return("DIRECT");
+				}
+
 			string Interface [optional]
 
 				Interface name like "wlan0" etc. to provide
