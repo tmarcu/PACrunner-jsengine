@@ -149,15 +149,26 @@ static JSClass jscls = {
 };
 
 static JSRuntime *jsrun;
-static JSContext *jsctx;
-
+static JSContext *jsctx = NULL;
 static JSObject *jsobj = NULL;
+
+static void destory_object(void)
+{
+	if (jsctx == NULL)
+		return;
+
+	JS_DestroyContext(jsctx);
+	jsctx = NULL;
+}
 
 static void create_object(void)
 {
 	jsval rval;
 
-	DBG("");
+	if (jsctx != NULL)
+		destory_object();
+
+	jsctx = JS_NewContext(jsrun, 8 * 1024);
 
 	jsobj = JS_NewObject(jsctx, &jscls, NULL, NULL);
 
@@ -173,13 +184,6 @@ static void create_object(void)
 	JS_EvaluateScript(jsctx, jsobj,
 				current_pacfile, strlen(current_pacfile),
 						"wpad.dat", 0, &rval);
-}
-
-static void destory_object(void)
-{
-	DBG("");
-
-	JS_GC(jsctx);
 }
 
 int __pacrunner_mozjs_set(const char *interface, const char *script)
@@ -313,7 +317,6 @@ int __pacrunner_mozjs_init(void)
 	DBG("");
 
 	jsrun = JS_NewRuntime(8 * 1024 * 1024);
-	jsctx = JS_NewContext(jsrun, 8 * 1024);
 
 	return 0;
 }
@@ -324,6 +327,5 @@ void __pacrunner_mozjs_cleanup(void)
 
 	__pacrunner_mozjs_clear();
 
-	JS_DestroyContext(jsctx);
 	JS_DestroyRuntime(jsrun);
 }
