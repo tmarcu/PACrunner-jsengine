@@ -144,6 +144,7 @@ static int getaddr(const char *node, char *host, size_t hostlen)
 
 	return 0;
 }
+
 static int resolve(const char *node, char *host, size_t hostlen)
 {
 	struct addrinfo *info;
@@ -167,22 +168,27 @@ static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 						jsval *argv, jsval *rval)
 {
 	char address[NI_MAXHOST];
+	char *result;
 
 	DBG("");
 
 	*rval = JSVAL_NULL;
 
 	if (current_interface == NULL)
-		return TRUE;
+		return JS_TRUE;
 
 	if (getaddr(current_interface, address, sizeof(address)) < 0)
-		return TRUE;
+		return JS_TRUE;
 
 	DBG("address %s", address);
 
-	*rval = STRING_TO_JSVAL(JS_NewString(ctx, address, strlen(address)));
+	result = JS_strdup(ctx, address);
+	if (result == NULL)
+		return JS_TRUE;
 
-	return TRUE;
+	*rval = STRING_TO_JSVAL(JS_NewString(ctx, result, strlen(result)));
+
+	return JS_TRUE;
 }
 
 static JSBool dnsresolve(JSContext *ctx, JSObject *obj, uintN argc,
@@ -190,19 +196,24 @@ static JSBool dnsresolve(JSContext *ctx, JSObject *obj, uintN argc,
 {
 	char address[NI_MAXHOST];
 	char *host = JS_GetStringBytes(JS_ValueToString(ctx, argv[0]));
+	char *result;
 
 	DBG("host %s", host);
 
 	*rval = JSVAL_NULL;
 
 	if (resolve(host, address, sizeof(address)) < 0)
-		return TRUE;
+		return JS_TRUE;
 
 	DBG("address %s", address);
 
-	*rval = STRING_TO_JSVAL(JS_NewString(ctx, address, strlen(address)));
+	result = JS_strdup(ctx, address);
+	if (result == NULL)
+		return JS_TRUE;
 
-	return TRUE;
+	*rval = STRING_TO_JSVAL(JS_NewString(ctx, result, strlen(result)));
+
+	return JS_TRUE;
 }
 
 static JSClass jscls = {
@@ -236,7 +247,7 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	JS_DefineFunction(jsctx, jsobj, "dnsResolve", dnsresolve, 1, 0);
 
 	JS_EvaluateScript(jsctx, jsobj, JAVASCRIPT_ROUTINES,
-			strlen(JAVASCRIPT_ROUTINES), "javascript.js", 0, &rval);
+				strlen(JAVASCRIPT_ROUTINES), NULL, 0, &rval);
 
 	JS_EvaluateScript(jsctx, jsobj,
 				current_pacfile, strlen(current_pacfile),
@@ -244,6 +255,14 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 
 	tmpurl = JS_strdup(jsctx, url);
 	tmphost = JS_strdup(jsctx, host);
+
+	if (tmpurl == NULL || tmphost == NULL) {
+		JS_free(jsctx, tmphost);
+		JS_free(jsctx, tmpurl);
+		return NULL;
+	}
+
+	JS_BeginRequest(jsctx);
 
 	args[0] = STRING_TO_JSVAL(JS_NewString(jsctx,
 					tmpurl, strlen(tmpurl)));
@@ -253,8 +272,9 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	result = JS_CallFunctionName(jsctx, jsobj, "FindProxyForURL",
 							2, args, &rval);
 
-	JS_free(jsctx, tmphost);
-	JS_free(jsctx, tmpurl);
+	JS_EndRequest(jsctx);
+
+	JS_MaybeGC(jsctx);
 
 	if (result) {
 		answer = JS_GetStringBytes(JS_ValueToString(jsctx, rval));
@@ -268,8 +288,8 @@ int __pacrunner_mozjs_init(void)
 {
 	DBG("");
 
-	jsrun = JS_NewRuntime(1024 * 1024);
-	jsctx = JS_NewContext(jsrun, 1024 * 1024);
+	jsrun = JS_NewRuntime(8 * 1024 * 1024);
+	jsctx = JS_NewContext(jsrun, 8 * 1024);
 
 	return 0;
 }
@@ -284,6 +304,6 @@ void __pacrunner_mozjs_cleanup(void)
 	g_free(current_pacfile);
 	current_pacfile = NULL;
 
-	//JS_DestroyContext(jsctx);
+	JS_DestroyContext(jsctx);
 	JS_DestroyRuntime(jsrun);
 }
