@@ -44,81 +44,6 @@
 static char *current_interface = NULL;
 static char *current_pacfile = NULL;
 
-int __pacrunner_mozjs_set(const char *interface, const char *pac)
-{
-	if (pac == NULL)
-		return -EINVAL;
-
-	DBG("interface %s", interface);
-
-	g_free(current_interface);
-	current_interface = g_strdup(interface);
-
-	g_free(current_pacfile);
-	current_pacfile = g_strdup(pac);
-
-	return 0;
-}
-
-int __pacrunner_mozjs_load(const char *interface, const char *url)
-{
-	const char *filename;
-	struct stat st;
-	int fd;
-
-	if (url == NULL)
-		return -EINVAL;
-
-	DBG("interface %s url %s", interface, url);
-
-	g_free(current_interface);
-	current_interface = g_strdup(interface);
-
-	g_free(current_pacfile);
-	current_pacfile = NULL;
-
-	if (g_str_has_prefix(url, "file://") == FALSE)
-		return -EINVAL;
-
-	filename = url + 7;
-
-	fd = open(filename, O_RDONLY);
-	if (fd < 0)
-		return -EIO;
-
-	if (fstat(fd, &st) < 0) {
-		close(fd);
-		return -EIO;
-	}
-
-	current_pacfile = g_try_malloc(st.st_size);
-	if (current_pacfile == NULL) {
-		close(fd);
-		return -ENOMEM;
-	}
-
-	if (read(fd, current_pacfile, st.st_size) < 0) {
-		close(fd);
-		g_free(current_pacfile);
-		current_pacfile = NULL;
-		return -EIO;
-	}
-
-	close(fd);
-
-	DBG("%s loaded", filename);
-
-	return 0;
-}
-
-void __pacrunner_mozjs_clear(void)
-{
-	DBG("");
-
-	g_free(current_pacfile);
-	current_pacfile = NULL;
-}
-
 static int getaddr(const char *node, char *host, size_t hostlen)
 {
 	struct sockaddr_in addr;
@@ -226,17 +151,13 @@ static JSClass jscls = {
 static JSRuntime *jsrun;
 static JSContext *jsctx;
 
-const char *__pacrunner_mozjs_execute(const char *url, const char *host)
+static JSObject *jsobj = NULL;
+
+static void create_object(void)
 {
-	JSObject *jsobj;
-	JSBool result;
-	jsval rval, args[2];
-	char *answer, *tmpurl, *tmphost;
+	jsval rval;
 
-	DBG("url %s host %s", url, host);
-
-	if (current_pacfile == NULL)
-		return "DIRECT";
+	DBG("");
 
 	jsobj = JS_NewObject(jsctx, &jscls, NULL, NULL);
 
@@ -252,6 +173,109 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	JS_EvaluateScript(jsctx, jsobj,
 				current_pacfile, strlen(current_pacfile),
 						"wpad.dat", 0, &rval);
+}
+
+static void destory_object(void)
+{
+	DBG("");
+
+	JS_GC(jsctx);
+}
+
+int __pacrunner_mozjs_set(const char *interface, const char *pac)
+{
+	if (pac == NULL)
+		return -EINVAL;
+
+	DBG("interface %s", interface);
+
+	g_free(current_interface);
+	current_interface = g_strdup(interface);
+
+	g_free(current_pacfile);
+	current_pacfile = g_strdup(pac);
+
+	create_object();
+
+	return 0;
+}
+
+int __pacrunner_mozjs_load(const char *interface, const char *url)
+{
+	const char *filename;
+	struct stat st;
+	int fd;
+
+	if (url == NULL)
+		return -EINVAL;
+
+	DBG("interface %s url %s", interface, url);
+
+	g_free(current_interface);
+	current_interface = g_strdup(interface);
+
+	g_free(current_pacfile);
+	current_pacfile = NULL;
+
+	if (g_str_has_prefix(url, "file://") == FALSE)
+		return -EINVAL;
+
+	filename = url + 7;
+
+	fd = open(filename, O_RDONLY);
+	if (fd < 0)
+		return -EIO;
+
+	if (fstat(fd, &st) < 0) {
+		close(fd);
+		return -EIO;
+	}
+
+	current_pacfile = g_try_malloc(st.st_size);
+	if (current_pacfile == NULL) {
+		close(fd);
+		return -ENOMEM;
+	}
+
+	if (read(fd, current_pacfile, st.st_size) < 0) {
+		close(fd);
+		g_free(current_pacfile);
+		current_pacfile = NULL;
+		return -EIO;
+	}
+
+	close(fd);
+
+	DBG("%s loaded", filename);
+
+	create_object();
+
+	return 0;
+}
+
+void __pacrunner_mozjs_clear(void)
+{
+	DBG("");
+
+	destory_object();
+
+	g_free(current_interface);
+	current_interface = NULL;
+
+	g_free(current_pacfile);
+	current_pacfile = NULL;
+}
+
+const char *__pacrunner_mozjs_execute(const char *url, const char *host)
+{
+	JSBool result;
+	jsval rval, args[2];
+	char *answer, *tmpurl, *tmphost;
+
+	DBG("url %s host %s", url, host);
+
+	if (current_pacfile == NULL)
+		return "DIRECT";
 
 	tmpurl = JS_strdup(jsctx, url);
 	tmphost = JS_strdup(jsctx, host);
@@ -298,11 +322,7 @@ void __pacrunner_mozjs_cleanup(void)
 {
 	DBG("");
 
-	g_free(current_interface);
-	current_interface = NULL;
-
-	g_free(current_pacfile);
-	current_pacfile = NULL;
+	__pacrunner_mozjs_clear();
 
 	JS_DestroyContext(jsctx);
 	JS_DestroyRuntime(jsrun);
