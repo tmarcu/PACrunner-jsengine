@@ -44,6 +44,22 @@
 static char *current_interface = NULL;
 static char *current_pacfile = NULL;
 
+int __pacrunner_mozjs_set(const char *interface, const char *pac)
+{
+	if (pac == NULL)
+		return -EINVAL;
+
+	DBG("interface %s", interface);
+
+	g_free(current_interface);
+	current_interface = g_strdup(interface);
+
+	g_free(current_pacfile);
+	current_pacfile = g_strdup(pac);
+
+	return 0;
+}
+
 int __pacrunner_mozjs_load(const char *interface, const char *url)
 {
 	const char *filename;
