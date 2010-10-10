@@ -29,11 +29,20 @@
 
 #include "pacrunner.h"
 
-#define MULTIPLE_COUNT 10
+#define MULTIPLE_COUNT	100
+
+#define EXAMPLE_URL	"http://www.example.com/site/test.html"
+#define EXAMPLE_HOST	"www.example.com"
+
+#define DIRECT_PAC	"function FindProxyForURL(url, host)\n"		\
+			"{\n"						\
+			"	return(\"DIRECT\");"			\
+			"}\n"
 
 static void test_single_init(void)
 {
-	__pacrunner_mozjs_init();
+	g_assert(__pacrunner_mozjs_init() == 0);
+
 	__pacrunner_mozjs_cleanup();
 }
 
@@ -42,7 +51,8 @@ static void test_multiple_init(void)
 	int i;
 
 	for (i = 0; i < MULTIPLE_COUNT; i++) {
-		__pacrunner_mozjs_init(); 
+		g_assert(__pacrunner_mozjs_init() == 0);
+
 		__pacrunner_mozjs_cleanup();
 	}
 }
@@ -51,10 +61,10 @@ static void test_single_execute_without_pac(void)
 {
 	const char *result;
 
-	__pacrunner_mozjs_init();
+	g_assert(__pacrunner_mozjs_init() == 0);
 
-	result = __pacrunner_mozjs_execute("http://www.example.com/",
-							"www.example.com");
+	result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
+	g_test_message("result: %s\n", result);
 
 	__pacrunner_mozjs_cleanup();
 }
@@ -64,11 +74,47 @@ static void test_multiple_execute_without_pac(void)
 	const char *result;
 	int i;
 
+	g_assert(__pacrunner_mozjs_init() == 0);
+
+	for (i = 0; i < MULTIPLE_COUNT; i++) {
+		result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
+		g_test_message("result %d: %s\n", i, result);
+	}
+
+	__pacrunner_mozjs_cleanup();
+}
+
+static void test_single_execute_with_direct_pac(void)
+{
+	const char *result;
+
+	g_assert(__pacrunner_mozjs_init() == 0);
+
+	g_assert(__pacrunner_mozjs_set(NULL, DIRECT_PAC) == 0);
+
+	result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
+	g_test_message("result: %s\n", result);
+
+	__pacrunner_mozjs_clear();
+
+	__pacrunner_mozjs_cleanup();
+}
+
+static void test_multiple_execute_with_direct_pac(void)
+{
+	const char *result;
+	int i;
+
 	__pacrunner_mozjs_init();
 
-	for (i = 0; i < MULTIPLE_COUNT; i++)
-		result = __pacrunner_mozjs_execute("http://www.example.com/",
-							"www.example.com");
+	g_assert(__pacrunner_mozjs_set(NULL, DIRECT_PAC) == 0);
+
+	for (i = 0; i < MULTIPLE_COUNT; i++) {
+		result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
+		g_test_message("result %d: %s\n", i, result);
+	}
+
+	__pacrunner_mozjs_clear();
 
 	__pacrunner_mozjs_cleanup();
 }
@@ -80,9 +126,13 @@ int main(int argc, char **argv)
 	g_test_add_func("/mozjs/single-init", test_single_init);
 	g_test_add_func("/mozjs/multiple-init", test_multiple_init);
 	g_test_add_func("/mozjs/single-execute-without-pac",
-					test_single_execute_without_pac);
+				test_single_execute_without_pac);
 	g_test_add_func("/mozjs/multiple-execute-without-pac",
-					test_multiple_execute_without_pac);
+				test_multiple_execute_without_pac);
+	g_test_add_func("/mozjs/single-execute-with-direct-pac",
+				test_single_execute_with_direct_pac);
+	g_test_add_func("/mozjs/multiple-execute-with-direct-pac",
+				test_multiple_execute_with_direct_pac);
 
 	return g_test_run();
 }
