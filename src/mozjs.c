@@ -43,6 +43,7 @@
 
 static char *current_interface = NULL;
 static char *current_pacfile = NULL;
+static char *current_server = NULL;
 
 static int getaddr(const char *node, char *host, size_t hostlen)
 {
@@ -152,21 +153,9 @@ static JSRuntime *jsrun;
 static JSContext *jsctx = NULL;
 static JSObject *jsobj = NULL;
 
-static void destory_object(void)
-{
-	if (jsctx == NULL)
-		return;
-
-	JS_DestroyContext(jsctx);
-	jsctx = NULL;
-}
-
 static void create_object(void)
 {
 	jsval rval;
-
-	if (jsctx != NULL)
-		destory_object();
 
 	jsctx = JS_NewContext(jsrun, 8 * 1024);
 
@@ -186,6 +175,36 @@ static void create_object(void)
 						"wpad.dat", 0, &rval);
 }
 
+static void destory_object(void)
+{
+	if (jsctx == NULL)
+		return;
+
+	JS_DestroyContext(jsctx);
+	jsctx = NULL;
+}
+
+int __pacrunner_mozjs_set_server(const char *interface, const char *server)
+{
+	if (server == NULL)
+		return -EINVAL;
+
+	DBG("interface %s server %s", interface, server);
+
+	destory_object();
+
+	g_free(current_interface);
+	current_interface = g_strdup(interface);
+
+	g_free(current_pacfile);
+	current_pacfile = NULL;
+
+	g_free(current_server);
+	current_server = g_strdup_printf("PROXY %s", server);
+
+	return 0;
+}
+
 int __pacrunner_mozjs_set(const char *interface, const char *script)
 {
 	if (script == NULL)
@@ -193,11 +212,16 @@ int __pacrunner_mozjs_set(const char *interface, const char *script)
 
 	DBG("interface %s script %p", interface, script);
 
+	destory_object();
+
 	g_free(current_interface);
 	current_interface = g_strdup(interface);
 
 	g_free(current_pacfile);
 	current_pacfile = g_strdup(script);
+
+	g_free(current_server);
+	current_server = NULL;
 
 	create_object();
 
@@ -215,11 +239,16 @@ int __pacrunner_mozjs_load(const char *interface, const char *url)
 
 	DBG("interface %s url %s", interface, url);
 
+	destory_object();
+
 	g_free(current_interface);
 	current_interface = g_strdup(interface);
 
 	g_free(current_pacfile);
 	current_pacfile = NULL;
+
+	g_free(current_server);
+	current_server = NULL;
 
 	if (g_str_has_prefix(url, "file://") == FALSE)
 		return -EINVAL;
@@ -277,6 +306,9 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	char *answer, *tmpurl, *tmphost;
 
 	DBG("url %s host %s", url, host);
+
+	if (current_server != NULL)
+		return current_server;
 
 	if (current_pacfile == NULL)
 		return "DIRECT";

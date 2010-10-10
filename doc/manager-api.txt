@@ -49,6 +49,11 @@ Methods		object CreateProxyConfiguration(dict settings)
 					return "DIRECT";
 				}
 
+			array{string} Servers [optional]
+
+				List of proxy servers. This value is only
+				valid when method is set to "manual".
+
 			string Interface [optional]
 
 				Interface name like "wlan0" etc. to provide
