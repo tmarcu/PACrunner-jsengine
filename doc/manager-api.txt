@@ -46,7 +46,7 @@ Methods		object CreateProxyConfiguration(dict settings)
 
 				function FindProxyForURL(url, host)
 				{
-					return("DIRECT");
+					return "DIRECT";
 				}
 
 			string Interface [optional]

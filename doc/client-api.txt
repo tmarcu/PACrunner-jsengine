@@ -18,7 +18,7 @@ Methods		string FindProxyForURL(string url, string host)
 
 				function FindProxyForURL(url, host)
 				{
-					return("DIRECT");
+					return "DIRECT";
 				}
 
 			There are no defined errors for this method except
