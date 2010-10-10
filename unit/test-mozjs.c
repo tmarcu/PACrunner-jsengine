@@ -48,6 +48,18 @@ void pacrunner_debug(const char *format, ...)
 			"	return \"DIRECT\";"			\
 			"}\n"
 
+#define EXAMPLE_PAC \
+	"function FindProxyForURL(url, host)\n"				\
+	"{\n"								\
+	"  var me = myIpAddress();\n"					\
+	"  var resolved_ip = dnsResolve(host);\n"			\
+	"  if (me == \"127.0.0.1\") { return \"DIRECT\"; }\n"		\
+	"  if (host == \"127.0.0.1\") { return \"DIRECT\"; }\n"		\
+	"  if (host == \"localhost\") { return \"DIRECT\"; }\n"		\
+	"  if (isPlainHostName(host)) { return \"DIRECT\"; }\n"		\
+	"  return \"PROXY proxy.example.com\";\n"			\
+	"}\n"
+
 static void test_single_init(void)
 {
 	g_assert(__pacrunner_mozjs_init() == 0);
@@ -147,6 +159,25 @@ static void test_massive_execute_with_direct_pac(void)
 	__pacrunner_mozjs_cleanup();
 }
 
+static void test_multiple_execute_with_example_pac(void)
+{
+	const char *result;
+	int i;
+
+	__pacrunner_mozjs_init();
+
+	g_assert(__pacrunner_mozjs_set(NULL, EXAMPLE_PAC) == 0);
+
+	for (i = 0; i < MULTIPLE_COUNT; i++) {
+		result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
+		g_test_message("result %d: %s\n", i, result);
+	}
+
+	__pacrunner_mozjs_clear();
+
+	__pacrunner_mozjs_cleanup();
+}
+
 int main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
@@ -163,6 +194,8 @@ int main(int argc, char **argv)
 				test_multiple_execute_with_direct_pac);
 	g_test_add_func("/mozjs/massive-execute-with-direct-pac",
 				test_massive_execute_with_direct_pac);
+	g_test_add_func("/mozjs/multiple-execute-with-example-pac",
+				test_multiple_execute_with_example_pac);
 
 	return g_test_run();
 }
