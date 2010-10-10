@@ -205,7 +205,7 @@ int __pacrunner_mozjs_set_server(const char *interface, const char *server)
 	return 0;
 }
 
-int __pacrunner_mozjs_set(const char *interface, const char *script)
+int __pacrunner_mozjs_set_script(const char *interface, const char *script)
 {
 	if (script == NULL)
 		return -EINVAL;
@@ -228,7 +228,7 @@ int __pacrunner_mozjs_set(const char *interface, const char *script)
 	return 0;
 }
 
-int __pacrunner_mozjs_load(const char *interface, const char *url)
+int __pacrunner_mozjs_load_url(const char *interface, const char *url)
 {
 	const char *filename;
 	struct stat st;

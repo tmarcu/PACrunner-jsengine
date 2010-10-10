@@ -125,11 +125,12 @@ static struct proxy_config *create_config(DBusConnection *conn,
 		return config;
 
 	if (config->script != NULL) {
-		if (__pacrunner_mozjs_set(config->interface,
-						config->script) < 0)
+		if (__pacrunner_mozjs_set_script(config->interface,
+							config->script) < 0)
 			pacrunner_error("Failed to set PAC script");
 	} else if (config->url != NULL) {
-		if (__pacrunner_mozjs_load(config->interface, config->url) < 0)
+		if (__pacrunner_mozjs_load_url(config->interface,
+							config->url) < 0)
 			pacrunner_error("Failed to load PAC");
 	}
 
