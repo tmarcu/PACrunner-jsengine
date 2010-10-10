@@ -143,7 +143,8 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 	DBusMessageIter iter, array;
 	struct proxy_config *config;
 	const char *sender, *method = NULL;
-	const char *url = NULL, *script = NULL, *server = NULL;
+	const char *url = NULL, *script = NULL;
+	const char *server = NULL, *exclude = NULL;
 	const char *interface = NULL, *domainname = NULL, *nameserver = NULL;
 
 	sender = dbus_message_get_sender(msg);
@@ -192,6 +193,10 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 				dbus_message_iter_get_basic(&list, &server);
 				if (strlen(server) == 0)
 					server = NULL;
+			} else if (g_str_equal(key, "Excludes") == TRUE) {
+				dbus_message_iter_get_basic(&list, &exclude);
+				if (strlen(exclude) == 0)
+					exclude = NULL;
 			} else if (g_str_equal(key, "Domains") == TRUE) {
 				dbus_message_iter_get_basic(&list, &domainname);
 				if (strlen(domainname) == 0)
@@ -208,9 +213,10 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 	}
 
 	DBG("sender %s method %s", sender, method);
-	DBG("url %s script %p server %s", url, script, server);
+	DBG("url %s script %p server %s exclude %s",
+				url, script, server, exclude);
 	DBG("interface %s domainname %s nameserver %s",
-					interface, domainname, nameserver);
+				interface, domainname, nameserver);
 
 	if (method == NULL)
 		return g_dbus_create_error(msg,

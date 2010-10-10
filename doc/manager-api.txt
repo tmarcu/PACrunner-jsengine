@@ -26,9 +26,6 @@ Methods		object CreateProxyConfiguration(dict settings)
 				The "auto" configuration requires to have
 				the URL setting filled in and be valud.
 
-				Support for "manual" configuration is
-				currently still missing.
-
 			string URL [optional]
 
 				URL for the PAC file. The URL must be
@@ -53,6 +50,10 @@ Methods		object CreateProxyConfiguration(dict settings)
 
 				List of proxy servers. This value is only
 				valid when method is set to "manual".
+
+			array{string} Excludes [optiona]
+
+				List of hosts to exclude from proxy lookup.
 
 			string Interface [optional]
 
