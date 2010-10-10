@@ -29,6 +29,14 @@
 
 #include "pacrunner.h"
 
+void pacrunner_error(const char *format, ...)
+{
+}
+
+void pacrunner_debug(const char *format, ...)
+{
+}
+
 #define MULTIPLE_COUNT	100
 
 #define EXAMPLE_URL	"http://www.example.com/site/test.html"

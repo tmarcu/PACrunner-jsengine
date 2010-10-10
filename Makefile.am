@@ -50,7 +50,7 @@ endif
 noinst_PROGRAMS = unit/test-mozjs
 
 unit_test_mozjs_SOURCES = unit/test-mozjs.c \
-				src/pacrunner.h src/log.c src/mozjs.c
+				src/pacrunner.h src/mozjs.c
 
 unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@
 
