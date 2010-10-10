@@ -24,12 +24,9 @@
 #endif
 
 #include <errno.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/socket.h>
 
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -42,7 +39,7 @@
 #include "pacrunner.h"
 
 static char *current_interface = NULL;
-static char *current_pacfile = NULL;
+static char *current_script = NULL;
 static char *current_server = NULL;
 
 static int getaddr(const char *node, char *host, size_t hostlen)
@@ -170,8 +167,7 @@ static void create_object(void)
 	JS_EvaluateScript(jsctx, jsobj, JAVASCRIPT_ROUTINES,
 				strlen(JAVASCRIPT_ROUTINES), NULL, 0, &rval);
 
-	JS_EvaluateScript(jsctx, jsobj,
-				current_pacfile, strlen(current_pacfile),
+	JS_EvaluateScript(jsctx, jsobj, current_script, strlen(current_script),
 						"wpad.dat", 0, &rval);
 }
 
@@ -196,8 +192,8 @@ int __pacrunner_mozjs_set_server(const char *interface, const char *server)
 	g_free(current_interface);
 	current_interface = g_strdup(interface);
 
-	g_free(current_pacfile);
-	current_pacfile = NULL;
+	g_free(current_script);
+	current_script = NULL;
 
 	g_free(current_server);
 	current_server = g_strdup_printf("PROXY %s", server);
@@ -217,69 +213,11 @@ int __pacrunner_mozjs_set_script(const char *interface, const char *script)
 	g_free(current_interface);
 	current_interface = g_strdup(interface);
 
-	g_free(current_pacfile);
-	current_pacfile = g_strdup(script);
+	g_free(current_script);
+	current_script = g_strdup(script);
 
 	g_free(current_server);
 	current_server = NULL;
-
-	create_object();
-
-	return 0;
-}
-
-int __pacrunner_mozjs_load_url(const char *interface, const char *url)
-{
-	const char *filename;
-	struct stat st;
-	int fd;
-
-	if (url == NULL)
-		return -EINVAL;
-
-	DBG("interface %s url %s", interface, url);
-
-	destory_object();
-
-	g_free(current_interface);
-	current_interface = g_strdup(interface);
-
-	g_free(current_pacfile);
-	current_pacfile = NULL;
-
-	g_free(current_server);
-	current_server = NULL;
-
-	if (g_str_has_prefix(url, "file://") == FALSE)
-		return -EINVAL;
-
-	filename = url + 7;
-
-	fd = open(filename, O_RDONLY);
-	if (fd < 0)
-		return -EIO;
-
-	if (fstat(fd, &st) < 0) {
-		close(fd);
-		return -EIO;
-	}
-
-	current_pacfile = g_try_malloc(st.st_size);
-	if (current_pacfile == NULL) {
-		close(fd);
-		return -ENOMEM;
-	}
-
-	if (read(fd, current_pacfile, st.st_size) < 0) {
-		close(fd);
-		g_free(current_pacfile);
-		current_pacfile = NULL;
-		return -EIO;
-	}
-
-	close(fd);
-
-	DBG("%s loaded", filename);
 
 	create_object();
 
@@ -295,8 +233,8 @@ void __pacrunner_mozjs_clear(void)
 	g_free(current_interface);
 	current_interface = NULL;
 
-	g_free(current_pacfile);
-	current_pacfile = NULL;
+	g_free(current_script);
+	current_script = NULL;
 
 	g_free(current_server);
 	current_server = NULL;
@@ -313,7 +251,7 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	if (current_server != NULL)
 		return current_server;
 
-	if (current_pacfile == NULL)
+	if (current_script == NULL)
 		return "DIRECT";
 
 	tmpurl = JS_strdup(jsctx, url);

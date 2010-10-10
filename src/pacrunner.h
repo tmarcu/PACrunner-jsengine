@@ -82,6 +82,5 @@ int __pacrunner_mozjs_init(void);
 void __pacrunner_mozjs_cleanup(void);
 int __pacrunner_mozjs_set_server(const char *interface, const char *server);
 int __pacrunner_mozjs_set_script(const char *interface, const char *script);
-int __pacrunner_mozjs_load_url(const char *interface, const char *url);
 void __pacrunner_mozjs_clear(void);
 const char *__pacrunner_mozjs_execute(const char *url, const char *host);
