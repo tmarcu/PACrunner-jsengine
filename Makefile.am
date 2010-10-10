@@ -21,7 +21,8 @@ src_pacrunner_SOURCES = $(gdbus_sources) src/pacrunner.h \
 				src/manager.c src/download.c \
 				src/mozjs.c src/javascript.h
 
-src_pacrunner_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
+src_pacrunner_LDADD = @MOZJS_LIBS@ @CURL_LIBS@ \
+				@GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
 
 if LIBPROXY
 include_HEADERS = libproxy/proxy.h
@@ -54,7 +55,8 @@ unit_test_mozjs_SOURCES = unit/test-mozjs.c \
 
 unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@
 
-AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ @MOZJS_CFLAGS@
+AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ \
+				@CURL_CFLAGS@ @MOZJS_CFLAGS@
 
 INCLUDES = -I$(srcdir)/src -I$(srcdir)/gdbus
 

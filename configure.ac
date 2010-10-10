@@ -87,6 +87,11 @@ else
 fi
 AC_SUBST(DBUS_DATADIR)
 
+PKG_CHECK_MODULES(CURL, libcurl >= 7.16, dummy=yes,
+				AC_MSG_ERROR(CURL >= 7.16 is required))
+AC_SUBST(CURL_CFLAGS)
+AC_SUBST(CURL_LIBS)
+
 AC_ARG_ENABLE(capng, AC_HELP_STRING([--enable-capng],
 		[enable capabilities support]), [enable_capng=${enableval}])
 if (test "${enable_capng}" = "yes"); then

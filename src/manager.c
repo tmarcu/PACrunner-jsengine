@@ -81,6 +81,24 @@ static void disconnect_callback(DBusConnection *conn, void *user_data)
 	g_hash_table_remove(config_list, config->path);
 }
 
+static void download_callback(char *content, void *user_data)
+{
+	struct proxy_config *config = user_data;
+
+	DBG("url %s content %p", config->url, content);
+
+	if (content == NULL) {
+		pacrunner_error("Failed to retrieve PAC script");
+		goto done;
+	}
+
+	if (__pacrunner_mozjs_set_script(config->interface, content) < 0)
+		pacrunner_error("Failed to set retrieved PAC script");
+
+done:
+	g_free(content);
+}
+
 static struct proxy_config *create_config(DBusConnection *conn,
 						const char *sender,
 						const char *method,
@@ -127,11 +145,11 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	if (config->script != NULL) {
 		if (__pacrunner_mozjs_set_script(config->interface,
 							config->script) < 0)
-			pacrunner_error("Failed to set PAC script");
+			pacrunner_error("Failed to set provided PAC script");
 	} else if (config->url != NULL) {
-		if (__pacrunner_mozjs_load_url(config->interface,
-							config->url) < 0)
-			pacrunner_error("Failed to load PAC");
+		if (__pacrunner_download_update(config->interface,
+				config->url, download_callback, config) < 0)
+			pacrunner_error("Failed to start PAC script download");
 	}
 
 	return config;
