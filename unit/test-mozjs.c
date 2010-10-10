@@ -37,7 +37,8 @@ void pacrunner_debug(const char *format, ...)
 {
 }
 
-#define MULTIPLE_COUNT	100
+#define MULTIPLE_COUNT	500
+#define MASSIVE_COUNT	MULTIPLE_COUNT * 100
 
 #define EXAMPLE_URL	"http://www.example.com/site/test.html"
 #define EXAMPLE_HOST	"www.example.com"
@@ -127,6 +128,25 @@ static void test_multiple_execute_with_direct_pac(void)
 	__pacrunner_mozjs_cleanup();
 }
 
+static void test_massive_execute_with_direct_pac(void)
+{
+	const char *result;
+	int i;
+
+	__pacrunner_mozjs_init();
+
+	g_assert(__pacrunner_mozjs_set(NULL, DIRECT_PAC) == 0);
+
+	for (i = 0; i < MASSIVE_COUNT; i++) {
+		result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
+		g_test_message("result %d: %s\n", i, result);
+	}
+
+	__pacrunner_mozjs_clear();
+
+	__pacrunner_mozjs_cleanup();
+}
+
 int main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
@@ -141,6 +161,8 @@ int main(int argc, char **argv)
 				test_single_execute_with_direct_pac);
 	g_test_add_func("/mozjs/multiple-execute-with-direct-pac",
 				test_multiple_execute_with_direct_pac);
+	g_test_add_func("/mozjs/massive-execute-with-direct-pac",
+				test_massive_execute_with_direct_pac);
 
 	return g_test_run();
 }
