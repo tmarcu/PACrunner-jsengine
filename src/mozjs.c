@@ -297,6 +297,9 @@ void __pacrunner_mozjs_clear(void)
 
 	g_free(current_pacfile);
 	current_pacfile = NULL;
+
+	g_free(current_server);
+	current_server = NULL;
 }
 
 const char *__pacrunner_mozjs_execute(const char *url, const char *host)
