@@ -65,12 +65,12 @@ int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
 
 
-typedef void (* __pacrunner_download_cb) (char *content, void *user_data);
+typedef void (* pacrunner_download_cb) (char *content, void *user_data);
 
 int __pacrunner_download_init(void);
 void __pacrunner_download_cleanup(void);
 int __pacrunner_download_update(const char *interface, const char *url,
-			__pacrunner_download_cb callback, void *user_data);
+			pacrunner_download_cb callback, void *user_data);
 
 int __pacrunner_manager_init(DBusConnection *conn);
 void __pacrunner_manager_cleanup();

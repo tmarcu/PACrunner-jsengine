@@ -33,7 +33,7 @@ struct download_data {
 	char *url;
 	CURL *easy;
 	GString *content;
-	__pacrunner_download_cb callback;
+	pacrunner_download_cb callback;
 	void *user_data;
 };
 
@@ -222,7 +222,7 @@ static int timer_callback(CURLM *multi, long timeout_ms, void *user_data)
 static CURLM *multi;
 
 int __pacrunner_download_update(const char *interface, const char *url,
-			__pacrunner_download_cb callback, void *user_data)
+			pacrunner_download_cb callback, void *user_data)
 {
 	struct download_data *download;
 	CURLMcode result;
