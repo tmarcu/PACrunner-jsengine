@@ -35,12 +35,10 @@ struct proxy_config {
 	DBusConnection *conn;
 	guint watch;
 
-	char *url;
-	char *script;
-	char *server;
-	char *interface;
 	char *domainname;
 	char *nameserver;
+
+	struct pacrunner_proxy *proxy;
 };
 
 static unsigned int next_config_number = 0;
@@ -53,17 +51,13 @@ static void destroy_config(gpointer data)
 
 	DBG("path %s", config->path);
 
-	__pacrunner_mozjs_clear();
+	pacrunner_proxy_unref(config->proxy);
 
 	if (config->watch > 0)
 		g_dbus_remove_watch(config->conn, config->watch);
 
 	g_free(config->nameserver);
 	g_free(config->domainname);
-	g_free(config->interface);
-	g_free(config->server);
-	g_free(config->script);
-	g_free(config->url);
 
 	g_free(config->sender);
 	g_free(config->path);
@@ -79,24 +73,6 @@ static void disconnect_callback(DBusConnection *conn, void *user_data)
 	config->watch = 0;
 
 	g_hash_table_remove(config_list, config->path);
-}
-
-static void download_callback(char *content, void *user_data)
-{
-	struct proxy_config *config = user_data;
-
-	DBG("url %s content %p", config->url, content);
-
-	if (content == NULL) {
-		pacrunner_error("Failed to retrieve PAC script");
-		goto done;
-	}
-
-	if (__pacrunner_mozjs_set_script(config->interface, content) < 0)
-		pacrunner_error("Failed to set retrieved PAC script");
-
-done:
-	g_free(content);
 }
 
 static struct proxy_config *create_config(DBusConnection *conn,
@@ -115,14 +91,16 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	if (config == NULL)
 		return NULL;
 
+	config->proxy = pacrunner_proxy_create(interface);
+	if (config->proxy == NULL) {
+		g_free(config);
+		return NULL;
+	}
+
 	config->path = g_strdup_printf("%s/configuration%d", PACRUNNER_PATH,
 							next_config_number++);
 	config->sender = g_strdup(sender);
 
-	config->url = g_strdup(url);
-	config->script = g_strdup(script);
-	config->server = g_strdup(server);
-	config->interface = g_strdup(interface);
 	config->domainname = g_strdup(domainname);
 	config->nameserver = g_strdup(nameserver);
 
@@ -133,23 +111,23 @@ static struct proxy_config *create_config(DBusConnection *conn,
 					disconnect_callback, config, NULL);
 
 	if (g_strcmp0(method, "manual") == 0) {
-		if (__pacrunner_mozjs_set_server(config->interface,
-							config->server) < 0)
+		if (pacrunner_proxy_set_server(config->proxy, server) < 0)
 			pacrunner_error("Failed to set proxy server");
+
+		return config;
+	} else if (g_strcmp0(method, "auto") != 0) {
+		if (pacrunner_proxy_set_direct(config->proxy) < 0)
+			pacrunner_error("Failed to set direct proxy");
+
 		return config;
 	}
 
-	if (g_strcmp0(method, "auto") != 0)
-		return config;
-
-	if (config->script != NULL) {
-		if (__pacrunner_mozjs_set_script(config->interface,
-							config->script) < 0)
+	if (script != NULL) {
+		if (pacrunner_proxy_set_script(config->proxy, script) < 0)
 			pacrunner_error("Failed to set provided PAC script");
-	} else if (config->url != NULL) {
-		if (__pacrunner_download_update(config->interface,
-				config->url, download_callback, config) < 0)
-			pacrunner_error("Failed to start PAC script download");
+	} else if (url != NULL) {
+		if (pacrunner_proxy_set_auto(config->proxy, url) < 0)
+			pacrunner_error("Failed to set PAC script URL");
 	}
 
 	return config;

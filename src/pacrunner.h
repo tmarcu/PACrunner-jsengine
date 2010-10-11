@@ -65,6 +65,28 @@ int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
 
 
+enum pacrunner_proxy_method {
+	PACRUNNER_PROXY_METHOD_UNKNOWN	= 0,
+	PACRUNNER_PROXY_METHOD_DIRECT	= 1,
+	PACRUNNER_PROXY_METHOD_MANUAL	= 2,
+	PACRUNNER_PROXY_METHOD_AUTO	= 3,
+};
+
+struct pacrunner_proxy;
+
+struct pacrunner_proxy *pacrunner_proxy_create(const char *interface);
+struct pacrunner_proxy *pacrunner_proxy_ref(struct pacrunner_proxy *proxy);
+void pacrunner_proxy_unref(struct pacrunner_proxy *proxy);
+
+int pacrunner_proxy_set_method(struct pacrunner_proxy *proxy,
+					enum pacrunner_proxy_method method);
+int pacrunner_proxy_set_direct(struct pacrunner_proxy *proxy);
+int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy, const char *url);
+int pacrunner_proxy_set_script(struct pacrunner_proxy *proxy,
+						const char *script);
+int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
+						const char *server);
+
 int __pacrunner_proxy_init(void);
 void __pacrunner_proxy_cleanup(void);
 
