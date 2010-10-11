@@ -65,6 +65,9 @@ int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
 
 
+int __pacrunner_proxy_init(void);
+void __pacrunner_proxy_cleanup(void);
+
 typedef void (* pacrunner_download_cb) (char *content, void *user_data);
 
 int __pacrunner_download_init(void);
