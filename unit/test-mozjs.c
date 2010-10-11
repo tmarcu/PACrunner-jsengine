@@ -60,6 +60,8 @@ void pacrunner_debug(const char *format, ...)
 	"  return \"PROXY proxy.example.com\";\n"			\
 	"}\n"
 
+static struct pacrunner_proxy *proxy;
+
 static void test_single_init(void)
 {
 	g_assert(__pacrunner_mozjs_init() == 0);
@@ -111,12 +113,12 @@ static void test_single_execute_with_direct_pac(void)
 
 	g_assert(__pacrunner_mozjs_init() == 0);
 
-	g_assert(__pacrunner_mozjs_set_script(NULL, DIRECT_PAC) == 0);
+	g_assert(pacrunner_proxy_set_script(proxy, DIRECT_PAC) == 0);
 
 	result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
 	g_test_message("result: %s\n", result);
 
-	__pacrunner_mozjs_clear();
+	__pacrunner_mozjs_set_proxy(NULL);
 
 	__pacrunner_mozjs_cleanup();
 }
@@ -128,14 +130,14 @@ static void test_multiple_execute_with_direct_pac(void)
 
 	__pacrunner_mozjs_init();
 
-	g_assert(__pacrunner_mozjs_set_script(NULL, DIRECT_PAC) == 0);
+	g_assert(pacrunner_proxy_set_script(proxy, DIRECT_PAC) == 0);
 
 	for (i = 0; i < MULTIPLE_COUNT; i++) {
 		result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
 		g_test_message("result %d: %s\n", i, result);
 	}
 
-	__pacrunner_mozjs_clear();
+	__pacrunner_mozjs_set_proxy(NULL);
 
 	__pacrunner_mozjs_cleanup();
 }
@@ -147,14 +149,14 @@ static void test_massive_execute_with_direct_pac(void)
 
 	__pacrunner_mozjs_init();
 
-	g_assert(__pacrunner_mozjs_set_script(NULL, DIRECT_PAC) == 0);
+	g_assert(pacrunner_proxy_set_script(proxy, DIRECT_PAC) == 0);
 
 	for (i = 0; i < MASSIVE_COUNT; i++) {
 		result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
 		g_test_message("result %d: %s\n", i, result);
 	}
 
-	__pacrunner_mozjs_clear();
+	__pacrunner_mozjs_set_proxy(NULL);
 
 	__pacrunner_mozjs_cleanup();
 }
@@ -166,14 +168,14 @@ static void test_multiple_execute_with_example_pac(void)
 
 	__pacrunner_mozjs_init();
 
-	g_assert(__pacrunner_mozjs_set_script(NULL, EXAMPLE_PAC) == 0);
+	g_assert(pacrunner_proxy_set_script(proxy, EXAMPLE_PAC) == 0);
 
 	for (i = 0; i < MULTIPLE_COUNT; i++) {
 		result = __pacrunner_mozjs_execute(EXAMPLE_URL, EXAMPLE_HOST);
 		g_test_message("result %d: %s\n", i, result);
 	}
 
-	__pacrunner_mozjs_clear();
+	__pacrunner_mozjs_set_proxy(NULL);
 
 	__pacrunner_mozjs_cleanup();
 }
@@ -181,6 +183,8 @@ static void test_multiple_execute_with_example_pac(void)
 int main(int argc, char **argv)
 {
 	g_test_init(&argc, &argv, NULL);
+
+	proxy = pacrunner_proxy_create(NULL);
 
 	g_test_add_func("/mozjs/single-init", test_single_init);
 	g_test_add_func("/mozjs/multiple-init", test_multiple_init);

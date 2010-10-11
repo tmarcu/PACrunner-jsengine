@@ -49,10 +49,10 @@ endif
 
 noinst_PROGRAMS = unit/test-mozjs
 
-unit_test_mozjs_SOURCES = unit/test-mozjs.c \
-				src/pacrunner.h src/mozjs.c
+unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
+				src/proxy.c src/download.c src/mozjs.c
 
-unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@
+unit_test_mozjs_LDADD = @MOZJS_LIBS@ @CURL_LIBS@ @GLIB_LIBS@
 
 AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ \
 				@CURL_CFLAGS@ @MOZJS_CFLAGS@
