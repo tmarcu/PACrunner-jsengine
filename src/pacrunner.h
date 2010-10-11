@@ -78,6 +78,9 @@ struct pacrunner_proxy *pacrunner_proxy_create(const char *interface);
 struct pacrunner_proxy *pacrunner_proxy_ref(struct pacrunner_proxy *proxy);
 void pacrunner_proxy_unref(struct pacrunner_proxy *proxy);
 
+const char *pacrunner_proxy_get_interface(struct pacrunner_proxy *proxy);
+const char *pacrunner_proxy_get_script(struct pacrunner_proxy *proxy);
+
 int pacrunner_proxy_set_method(struct pacrunner_proxy *proxy,
 					enum pacrunner_proxy_method method);
 int pacrunner_proxy_set_direct(struct pacrunner_proxy *proxy);
@@ -105,7 +108,5 @@ void __pacrunner_client_cleanup();
 
 int __pacrunner_mozjs_init(void);
 void __pacrunner_mozjs_cleanup(void);
-int __pacrunner_mozjs_set_server(const char *interface, const char *server);
-int __pacrunner_mozjs_set_script(const char *interface, const char *script);
-void __pacrunner_mozjs_clear(void);
+int __pacrunner_mozjs_set_proxy(struct pacrunner_proxy *proxy);
 const char *__pacrunner_mozjs_execute(const char *url, const char *host);

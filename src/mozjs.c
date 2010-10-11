@@ -38,9 +38,7 @@
 
 #include "pacrunner.h"
 
-static char *current_interface = NULL;
-static char *current_script = NULL;
-static char *current_server = NULL;
+struct pacrunner_proxy *current_proxy = NULL;
 
 static int getaddr(const char *node, char *host, size_t hostlen)
 {
@@ -90,6 +88,7 @@ static int resolve(const char *node, char *host, size_t hostlen)
 static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 						jsval *argv, jsval *rval)
 {
+	const char *interface;
 	char address[NI_MAXHOST];
 	char *result;
 
@@ -97,10 +96,14 @@ static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 
 	*rval = JSVAL_NULL;
 
-	if (current_interface == NULL)
+	if (current_proxy == NULL)
 		return JS_TRUE;
 
-	if (getaddr(current_interface, address, sizeof(address)) < 0)
+	interface = pacrunner_proxy_get_interface(current_proxy);
+	if (interface == NULL)
+		return JS_TRUE;
+
+	if (getaddr(interface, address, sizeof(address)) < 0)
 		return JS_TRUE;
 
 	DBG("address %s", address);
@@ -152,7 +155,13 @@ static JSObject *jsobj = NULL;
 
 static void create_object(void)
 {
+	const char *script;
 	jsval rval;
+
+	if (current_proxy == NULL)
+		return;
+
+	script = pacrunner_proxy_get_script(current_proxy);
 
 	jsctx = JS_NewContext(jsrun, 8 * 1024);
 
@@ -167,77 +176,34 @@ static void create_object(void)
 	JS_EvaluateScript(jsctx, jsobj, JAVASCRIPT_ROUTINES,
 				strlen(JAVASCRIPT_ROUTINES), NULL, 0, &rval);
 
-	JS_EvaluateScript(jsctx, jsobj, current_script, strlen(current_script),
+	JS_EvaluateScript(jsctx, jsobj, script, strlen(script),
 						"wpad.dat", 0, &rval);
 }
 
-static void destory_object(void)
+static void destroy_object(void)
 {
 	if (jsctx == NULL)
 		return;
 
 	JS_DestroyContext(jsctx);
 	jsctx = NULL;
+
+	jsobj = NULL;
 }
 
-int __pacrunner_mozjs_set_server(const char *interface, const char *server)
+int __pacrunner_mozjs_set_proxy(struct pacrunner_proxy *proxy)
 {
-	if (server == NULL)
-		return -EINVAL;
+	DBG("proxy %p", proxy);
 
-	DBG("interface %s server %s", interface, server);
+	if (current_proxy != NULL)
+		destroy_object();
 
-	destory_object();
+	current_proxy = proxy;
 
-	g_free(current_interface);
-	current_interface = g_strdup(interface);
-
-	g_free(current_script);
-	current_script = NULL;
-
-	g_free(current_server);
-	current_server = g_strdup_printf("PROXY %s", server);
+	if (current_proxy != NULL)
+		create_object();
 
 	return 0;
-}
-
-int __pacrunner_mozjs_set_script(const char *interface, const char *script)
-{
-	if (script == NULL)
-		return -EINVAL;
-
-	DBG("interface %s script %p", interface, script);
-
-	destory_object();
-
-	g_free(current_interface);
-	current_interface = g_strdup(interface);
-
-	g_free(current_script);
-	current_script = g_strdup(script);
-
-	g_free(current_server);
-	current_server = NULL;
-
-	create_object();
-
-	return 0;
-}
-
-void __pacrunner_mozjs_clear(void)
-{
-	DBG("");
-
-	destory_object();
-
-	g_free(current_interface);
-	current_interface = NULL;
-
-	g_free(current_script);
-	current_script = NULL;
-
-	g_free(current_server);
-	current_server = NULL;
 }
 
 const char *__pacrunner_mozjs_execute(const char *url, const char *host)
@@ -248,10 +214,7 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 
 	DBG("url %s host %s", url, host);
 
-	if (current_server != NULL)
-		return current_server;
-
-	if (current_script == NULL)
+	if (jsctx == NULL)
 		return "DIRECT";
 
 	tmpurl = JS_strdup(jsctx, url);
@@ -298,7 +261,7 @@ void __pacrunner_mozjs_cleanup(void)
 {
 	DBG("");
 
-	__pacrunner_mozjs_clear();
+	__pacrunner_mozjs_set_proxy(NULL);
 
 	JS_DestroyRuntime(jsrun);
 }

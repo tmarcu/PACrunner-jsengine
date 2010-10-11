@@ -93,12 +93,32 @@ void pacrunner_proxy_unref(struct pacrunner_proxy *proxy)
 	if (g_atomic_int_dec_and_test(&proxy->refcount) == FALSE)
 		return;
 
-	__pacrunner_mozjs_clear();
+	__pacrunner_mozjs_set_proxy(NULL);
 
 	reset_proxy(proxy);
 
 	g_free(proxy->interface);
 	g_free(proxy);
+}
+
+const char *pacrunner_proxy_get_interface(struct pacrunner_proxy *proxy)
+{
+	DBG("proxy %p", proxy);
+
+	if (proxy == NULL)
+		return NULL;
+
+	return proxy->interface;
+}
+
+const char *pacrunner_proxy_get_script(struct pacrunner_proxy *proxy)
+{
+	DBG("proxy %p", proxy);
+
+	if (proxy == NULL)
+		return NULL;
+
+	return proxy->script;
 }
 
 int pacrunner_proxy_set_method(struct pacrunner_proxy *proxy,
@@ -140,11 +160,10 @@ static void download_callback(char *content, void *user_data)
 		goto done;
 	}
 
-	if (__pacrunner_mozjs_set_script(proxy->interface, content) < 0)
-		pacrunner_error("Failed to set retrieved PAC script");
-
 	g_free(proxy->script);
 	proxy->script = content;
+
+	__pacrunner_mozjs_set_proxy(proxy);
 
 done:
 	pacrunner_proxy_unref(proxy);
@@ -204,9 +223,7 @@ int pacrunner_proxy_set_script(struct pacrunner_proxy *proxy,
 	g_free(proxy->script);
 	proxy->script = g_strdup(script);
 
-	err = __pacrunner_mozjs_set_script(proxy->interface, script);
-	if (err < 0)
-		return err;
+	__pacrunner_mozjs_set_proxy(proxy);
 
 	return 0;
 }
@@ -231,9 +248,7 @@ int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
 	g_free(proxy->server);
 	proxy->server = g_strdup(server);
 
-	err = __pacrunner_mozjs_set_server(proxy->interface, server);
-	if (err < 0)
-		return err;
+	__pacrunner_mozjs_set_proxy(proxy);
 
 	return 0;
 }
