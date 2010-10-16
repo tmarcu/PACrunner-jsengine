@@ -162,6 +162,8 @@ static void create_object(void)
 		return;
 
 	script = pacrunner_proxy_get_script(current_proxy);
+	if (script == NULL)
+		return;
 
 	jsctx = JS_NewContext(jsrun, 8 * 1024);
 
