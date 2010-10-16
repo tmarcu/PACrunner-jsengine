@@ -252,6 +252,7 @@ int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
 }
 
 static GList *proxy_list = NULL;
+static GStaticMutex proxy_mutex = G_STATIC_MUTEX_INIT;
 
 int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
 {
@@ -272,7 +273,9 @@ int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
 
 	__pacrunner_mozjs_set_proxy(proxy);
 
+	g_static_mutex_lock(&proxy_mutex);
 	proxy_list = g_list_append(proxy_list, proxy);
+	g_static_mutex_unlock(&proxy_mutex);
 
 	return 0;
 }
@@ -290,7 +293,9 @@ int pacrunner_proxy_disable(struct pacrunner_proxy *proxy)
 	if (list == NULL)
 		return -ENXIO;
 
+	g_static_mutex_lock(&proxy_mutex);
 	proxy_list = g_list_remove_link(proxy_list, list);
+	g_static_mutex_unlock(&proxy_mutex);
 
 	__pacrunner_mozjs_set_proxy(NULL);
 
@@ -309,6 +314,8 @@ const char *pacrunner_proxy_lookup(const char *url, const char *host)
 	if (proxy_list == NULL)
 		return "DIRECT";
 
+	g_static_mutex_lock(&proxy_mutex);
+
 	for (list = g_list_first(proxy_list); list; list = g_list_next(list)) {
 		struct pacrunner_proxy *proxy = list->data;
 
@@ -319,6 +326,8 @@ const char *pacrunner_proxy_lookup(const char *url, const char *host)
 		} else if (proxy->method == PACRUNNER_PROXY_METHOD_DIRECT)
 			selected_proxy = proxy;
 	}
+
+	g_static_mutex_unlock(&proxy_mutex);
 
 	if (selected_proxy == NULL)
 		return "DIRECT";
