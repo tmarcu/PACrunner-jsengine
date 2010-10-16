@@ -35,6 +35,7 @@ struct pacrunner_proxy {
 	char *url;
 	char *script;
 	char *server;
+	char *result;
 };
 
 struct pacrunner_proxy *pacrunner_proxy_create(const char *interface)
@@ -81,6 +82,9 @@ static void reset_proxy(struct pacrunner_proxy *proxy)
 
 	g_free(proxy->server);
 	proxy->server = NULL;
+
+	g_free(proxy->result);
+	proxy->result = NULL;
 }
 
 void pacrunner_proxy_unref(struct pacrunner_proxy *proxy)
@@ -246,6 +250,9 @@ int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
 	g_free(proxy->server);
 	proxy->server = g_strdup(server);
 
+	g_free(proxy->result);
+	proxy->result = g_strdup_printf("PROXY %s", server);
+
 	pacrunner_proxy_enable(proxy);
 
 	return 0;
@@ -335,13 +342,16 @@ const char *pacrunner_proxy_lookup(const char *url, const char *host)
 	switch (selected_proxy->method) {
 	case PACRUNNER_PROXY_METHOD_UNKNOWN:
 	case PACRUNNER_PROXY_METHOD_DIRECT:
-		return "DIRECT";
-	case PACRUNNER_PROXY_METHOD_MANUAL:
-	case PACRUNNER_PROXY_METHOD_AUTO:
 		break;
+	case PACRUNNER_PROXY_METHOD_MANUAL:
+		if (selected_proxy->result == NULL)
+			break;
+		return selected_proxy->result;
+	case PACRUNNER_PROXY_METHOD_AUTO:
+		return __pacrunner_mozjs_execute(url, host);
 	}
 
-	return __pacrunner_mozjs_execute(url, host);
+	return "DIRECT";
 }
 
 int __pacrunner_proxy_init(void)
