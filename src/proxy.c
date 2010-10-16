@@ -295,6 +295,9 @@ const char *pacrunner_proxy_lookup(const char *url, const char *host)
 {
 	DBG("url %s host %s", url, host);
 
+	if (proxy_list == NULL)
+		return "DIRECT";
+
 	return __pacrunner_mozjs_execute(url, host);
 }
 
