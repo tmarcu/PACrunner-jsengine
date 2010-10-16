@@ -57,7 +57,7 @@ static gpointer jsrun_thread(gpointer data)
 
 	DBG("url %s host %s", url, host);
 
-	result = __pacrunner_mozjs_execute(url, host);
+	result = pacrunner_proxy_lookup(url, host);
 
 	DBG("result %s", result);
 

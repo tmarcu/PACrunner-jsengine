@@ -253,6 +253,13 @@ int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
 	return 0;
 }
 
+const char *pacrunner_proxy_lookup(const char *url, const char *host)
+{
+	DBG("url %s host %s", url, host);
+
+	return __pacrunner_mozjs_execute(url, host);
+}
+
 int __pacrunner_proxy_init(void)
 {
 	DBG("");

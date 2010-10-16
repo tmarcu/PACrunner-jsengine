@@ -90,6 +90,8 @@ int pacrunner_proxy_set_script(struct pacrunner_proxy *proxy,
 int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
 						const char *server);
 
+const char *pacrunner_proxy_lookup(const char *url, const char *host);
+
 int __pacrunner_proxy_init(void);
 void __pacrunner_proxy_cleanup(void);
 
