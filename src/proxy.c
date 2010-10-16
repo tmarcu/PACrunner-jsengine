@@ -93,8 +93,6 @@ void pacrunner_proxy_unref(struct pacrunner_proxy *proxy)
 	if (g_atomic_int_dec_and_test(&proxy->refcount) == FALSE)
 		return;
 
-	__pacrunner_mozjs_set_proxy(NULL);
-
 	reset_proxy(proxy);
 
 	g_free(proxy->interface);
@@ -163,7 +161,7 @@ static void download_callback(char *content, void *user_data)
 	g_free(proxy->script);
 	proxy->script = content;
 
-	__pacrunner_mozjs_set_proxy(proxy);
+	pacrunner_proxy_enable(proxy);
 
 done:
 	pacrunner_proxy_unref(proxy);
@@ -223,7 +221,7 @@ int pacrunner_proxy_set_script(struct pacrunner_proxy *proxy,
 	g_free(proxy->script);
 	proxy->script = g_strdup(script);
 
-	__pacrunner_mozjs_set_proxy(proxy);
+	pacrunner_proxy_enable(proxy);
 
 	return 0;
 }
@@ -248,7 +246,7 @@ int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
 	g_free(proxy->server);
 	proxy->server = g_strdup(server);
 
-	__pacrunner_mozjs_set_proxy(proxy);
+	pacrunner_proxy_enable(proxy);
 
 	return 0;
 }
@@ -257,14 +255,22 @@ static GList *proxy_list = NULL;
 
 int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
 {
+	GList *list;
+
 	DBG("proxy %p", proxy);
 
 	if (proxy == NULL)
 		return -EINVAL;
 
+	list = g_list_find(proxy_list, proxy);
+	if (list != NULL)
+		return -EEXIST;
+
 	proxy = pacrunner_proxy_ref(proxy);
 	if (proxy == NULL)
 		return -EIO;
+
+	__pacrunner_mozjs_set_proxy(proxy);
 
 	proxy_list = g_list_append(proxy_list, proxy);
 
@@ -285,6 +291,8 @@ int pacrunner_proxy_disable(struct pacrunner_proxy *proxy)
 		return -ENXIO;
 
 	proxy_list = g_list_remove_link(proxy_list, list);
+
+	__pacrunner_mozjs_set_proxy(NULL);
 
 	pacrunner_proxy_unref(proxy);
 

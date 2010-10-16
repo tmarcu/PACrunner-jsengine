@@ -230,8 +230,6 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 
 	g_hash_table_insert(config_list, config->path, config);
 
-	pacrunner_proxy_enable(config->proxy);
-
 	return g_dbus_create_reply(msg, DBUS_TYPE_OBJECT_PATH, &config->path,
 							DBUS_TYPE_INVALID);
 }
