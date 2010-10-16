@@ -301,10 +301,36 @@ int pacrunner_proxy_disable(struct pacrunner_proxy *proxy)
 
 const char *pacrunner_proxy_lookup(const char *url, const char *host)
 {
+	GList *list;
+	struct pacrunner_proxy *selected_proxy = NULL;
+
 	DBG("url %s host %s", url, host);
 
 	if (proxy_list == NULL)
 		return "DIRECT";
+
+	for (list = g_list_first(proxy_list); list; list = g_list_next(list)) {
+		struct pacrunner_proxy *proxy = list->data;
+
+		if (proxy->method == PACRUNNER_PROXY_METHOD_MANUAL ||
+				proxy->method == PACRUNNER_PROXY_METHOD_AUTO) {
+			selected_proxy = proxy;
+			break;
+		} else if (proxy->method == PACRUNNER_PROXY_METHOD_DIRECT)
+			selected_proxy = proxy;
+	}
+
+	if (selected_proxy == NULL)
+		return "DIRECT";
+
+	switch (selected_proxy->method) {
+	case PACRUNNER_PROXY_METHOD_UNKNOWN:
+	case PACRUNNER_PROXY_METHOD_DIRECT:
+		return "DIRECT";
+	case PACRUNNER_PROXY_METHOD_MANUAL:
+	case PACRUNNER_PROXY_METHOD_AUTO:
+		break;
+	}
 
 	return __pacrunner_mozjs_execute(url, host);
 }
