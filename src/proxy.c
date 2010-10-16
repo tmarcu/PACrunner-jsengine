@@ -253,6 +253,44 @@ int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
 	return 0;
 }
 
+static GList *proxy_list = NULL;
+
+int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
+{
+	DBG("proxy %p", proxy);
+
+	if (proxy == NULL)
+		return -EINVAL;
+
+	proxy = pacrunner_proxy_ref(proxy);
+	if (proxy == NULL)
+		return -EIO;
+
+	proxy_list = g_list_append(proxy_list, proxy);
+
+	return 0;
+}
+
+int pacrunner_proxy_disable(struct pacrunner_proxy *proxy)
+{
+	GList *list;
+
+	DBG("proxy %p", proxy);
+
+	if (proxy == NULL)
+		return -EINVAL;
+
+	list = g_list_find(proxy_list, proxy);
+	if (list == NULL)
+		return -ENXIO;
+
+	proxy_list = g_list_remove_link(proxy_list, list);
+
+	pacrunner_proxy_unref(proxy);
+
+	return 0;
+}
+
 const char *pacrunner_proxy_lookup(const char *url, const char *host)
 {
 	DBG("url %s host %s", url, host);
@@ -269,5 +307,19 @@ int __pacrunner_proxy_init(void)
 
 void __pacrunner_proxy_cleanup(void)
 {
+	GList *list;
+
 	DBG("");
+
+	for (list = g_list_first(proxy_list); list; list = g_list_next(list)) {
+		struct pacrunner_proxy *proxy = list->data;
+
+		DBG("proxy %p", proxy);
+
+		if (proxy != NULL)
+			pacrunner_proxy_unref(proxy);
+	}
+
+	g_list_free(proxy_list);
+	proxy_list = NULL;
 }

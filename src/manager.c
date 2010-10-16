@@ -51,6 +51,8 @@ static void destroy_config(gpointer data)
 
 	DBG("path %s", config->path);
 
+	pacrunner_proxy_disable(config->proxy);
+
 	pacrunner_proxy_unref(config->proxy);
 
 	if (config->watch > 0)
@@ -227,6 +229,8 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 					"Memory allocation failed");
 
 	g_hash_table_insert(config_list, config->path, config);
+
+	pacrunner_proxy_enable(config->proxy);
 
 	return g_dbus_create_reply(msg, DBUS_TYPE_OBJECT_PATH, &config->path,
 							DBUS_TYPE_INVALID);
