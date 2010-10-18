@@ -34,35 +34,15 @@
 #define PACRUNNER_CLIENT_PATH		PACRUNNER_PATH "/client"
 
 
-void pacrunner_info(const char *format, ...)
-				__attribute__((format(printf, 1, 2)));
-void pacrunner_warn(const char *format, ...)
-				__attribute__((format(printf, 1, 2)));
-void pacrunner_error(const char *format, ...)
-				__attribute__((format(printf, 1, 2)));
-void pacrunner_debug(const char *format, ...)
-				__attribute__((format(printf, 1, 2)));
-
-struct pacrunner_debug_desc {
-	const char *name;
-	const char *file;
-#define PACRUNNER_DEBUG_FLAG_DEFAULT (0)
-#define PACRUNNER_DEBUG_FLAG_PRINT   (1 << 0)
-	unsigned int flags;
-} __attribute__((aligned(8)));
-
-#define DBG(fmt, arg...) do { \
-	static struct pacrunner_debug_desc __pacrunner_debug_desc \
-	__attribute__((used, section("__debug"), aligned(8))) = { \
-		.file = __FILE__, .flags = PACRUNNER_DEBUG_FLAG_DEFAULT, \
-	}; \
-	if (__pacrunner_debug_desc.flags & PACRUNNER_DEBUG_FLAG_PRINT) \
-		pacrunner_debug("%s:%s() " fmt, \
-					__FILE__, __FUNCTION__ , ## arg); \
-} while (0)
+#include "log.h"
 
 int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
+
+#include "plugin.h"
+
+int __pacrunner_plugin_init(void);
+void __pacrunner_plugin_cleanup(void);
 
 
 enum pacrunner_proxy_method {

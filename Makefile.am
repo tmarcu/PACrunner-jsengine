@@ -14,14 +14,30 @@ endif
 gdbus_sources = gdbus/gdbus.h gdbus/mainloop.c gdbus/watch.c \
 					gdbus/object.c gdbus/polkit.c
 
+builtin_modules =
+builtin_sources =
+builtin_cflags =
+builtin_libadd =
+
 sbin_PROGRAMS = src/pacrunner
 
-src_pacrunner_SOURCES = $(gdbus_sources) src/pacrunner.h \
-			src/main.c src/log.c src/client.c src/manager.c \
-			src/proxy.c src/download.c src/mozjs.c src/javascript.h
+src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
+			src/main.c src/pacrunner.h \
+			src/log.h src/log.c src/plugin.h src/plugin.c \
+			src/client.c src/manager.c src/download.c \
+			src/proxy.c src/mozjs.c src/javascript.h
 
 src_pacrunner_LDADD = @MOZJS_LIBS@ @CURL_LIBS@ \
-				@GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@
+				@GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@ -ldl
+
+src_pacrunner_LDFLAGS = -Wl,--export-dynamic
+
+nodist_src_pacrunner_SOURCES = src/builtin.h
+
+src/plugin.$(OBJEXT): src/builtin.h
+
+src/builtin.h: src/genbuiltin $(builtin_sources)
+	$(AM_V_GEN)$(srcdir)/src/genbuiltin $(builtin_modules) > $@
 
 if LIBPROXY
 include_HEADERS = libproxy/proxy.h
@@ -54,10 +70,12 @@ unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
 
 unit_test_mozjs_LDADD = @MOZJS_LIBS@ @CURL_LIBS@ @GLIB_LIBS@
 
-AM_CFLAGS = @CAPNG_CFLAGS@ @DBUS_CFLAGS@ @GLIB_CFLAGS@ \
-				@CURL_CFLAGS@ @MOZJS_CFLAGS@
+AM_CFLAGS = @GLIB_CFLAGS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ $(builtin_cflags) \
+					@MOZJS_CFLAGS@ @CURL_CFLAGS@ \
+					-DPACRUNNER_PLUGIN_BUILTIN \
+					-DPLUGINDIR=\""$(plugindir)"\"
 
-INCLUDES = -I$(srcdir)/src -I$(srcdir)/gdbus
+INCLUDES = -I$(builddir)/src -I$(srcdir)/src -I$(srcdir)/gdbus
 
 test_scripts = test/find-proxy-for-url test/create-proxy-config
 
@@ -66,7 +84,9 @@ testdir = $(pkglibdir)/test
 test_SCRIPTS = $(test_scripts)
 endif
 
-EXTRA_DIST = src/pacrunner.conf $(test_scripts) \
+CLEANFILES = src/builtin.h
+
+EXTRA_DIST = src/genbuiltin src/pacrunner.conf $(test_scripts) \
 			doc/architecture.txt doc/libproxy.txt \
 				doc/manager-api.txt doc/client-api.txt
 

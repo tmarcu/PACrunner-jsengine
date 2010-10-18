@@ -10,6 +10,12 @@ AM_MAINTAINER_MODE
 
 AC_PREFIX_DEFAULT(/usr/local)
 
+if (test "${libdir}" = '${exec_prefix}/lib'); then
+	libdir="${prefix}/lib"
+fi
+
+plugindir="${libdir}/pacrunner/plugins"
+
 PKG_PROG_PKG_CONFIG
 
 COMPILER_FLAGS

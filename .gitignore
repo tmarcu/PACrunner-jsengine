@@ -24,6 +24,7 @@ missing
 stamp-h1
 autom4te.cache
 
+src/builtin.h
 src/pacrunner
 src/pacrunner.service
 libproxy/libproxy-1.0.pc
