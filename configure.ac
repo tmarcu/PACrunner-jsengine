@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-AC_INIT(pacrunner, 0.0)
+AC_INIT(pacrunner, 0.1)
 
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_CONFIG_HEADER(config.h)
