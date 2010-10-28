@@ -40,6 +40,8 @@ src_pacrunner_LDFLAGS = -Wl,--export-dynamic
 
 nodist_src_pacrunner_SOURCES = src/builtin.h
 
+plugindir = $(libdir)/pacrunner/plugins
+
 src/plugin.$(OBJEXT): src/builtin.h
 
 src/builtin.h: src/genbuiltin $(builtin_sources)

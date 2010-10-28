@@ -81,7 +81,7 @@ int __pacrunner_plugin_init(void)
 		add_plugin(NULL, __pacrunner_builtin[i]);
 
 	dir = g_dir_open(PLUGINDIR, 0, NULL);
-	if (dir != NULL)
+	if (dir == NULL)
 		return -EIO;
 
 	while ((file = g_dir_read_name(dir)) != NULL) {

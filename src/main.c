@@ -162,6 +162,7 @@ int main(int argc, char *argv[])
 	__pacrunner_manager_init(conn);
 	__pacrunner_client_init(conn);
 	__pacrunner_mozjs_init();
+	__pacrunner_plugin_init();
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = sig_term;
@@ -170,6 +171,7 @@ int main(int argc, char *argv[])
 
 	g_main_loop_run(main_loop);
 
+	__pacrunner_plugin_cleanup();
 	__pacrunner_mozjs_cleanup();
 	__pacrunner_client_cleanup();
 	__pacrunner_manager_cleanup();
