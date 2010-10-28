@@ -24,7 +24,8 @@ sbin_PROGRAMS = src/pacrunner
 src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/main.c src/pacrunner.h \
 			src/log.h src/log.c src/plugin.h src/plugin.c \
-			src/client.c src/manager.c src/download.c \
+			src/download.h src/download.c \
+			src/client.c src/manager.c \
 			src/proxy.c src/mozjs.c src/javascript.h
 
 src_pacrunner_LDADD = @MOZJS_LIBS@ @CURL_LIBS@ \

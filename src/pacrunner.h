@@ -78,7 +78,8 @@ const char *pacrunner_proxy_lookup(const char *url, const char *host);
 int __pacrunner_proxy_init(void);
 void __pacrunner_proxy_cleanup(void);
 
-typedef void (* pacrunner_download_cb) (char *content, void *user_data);
+
+#include "download.h"
 
 int __pacrunner_download_init(void);
 void __pacrunner_download_cleanup(void);

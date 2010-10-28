@@ -29,6 +29,24 @@
 
 #include "pacrunner.h"
 
+static GSList *driver_list = NULL;
+
+int pacrunner_download_driver_register(struct pacrunner_download_driver *driver)
+{
+	DBG("driver %p name %s", driver, driver->name);
+
+	driver_list = g_slist_append(driver_list, driver);
+
+	return 0;
+}
+
+void pacrunner_download_driver_unregister(struct pacrunner_download_driver *driver)
+{
+	DBG("driver %p name %s", driver, driver->name);
+
+	driver_list = g_slist_remove(driver_list, driver);
+}
+
 struct download_data {
 	char *url;
 	CURL *easy;
