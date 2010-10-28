@@ -19,6 +19,11 @@ builtin_sources =
 builtin_cflags =
 builtin_libadd =
 
+builtin_modules += curl
+builtin_sources += plugins/curl.c
+builtin_cflags += @CURL_CFLAGS@
+builtin_libadd += @CURL_LIBS@
+
 sbin_PROGRAMS = src/pacrunner
 
 src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
@@ -28,7 +33,7 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/client.c src/manager.c \
 			src/proxy.c src/mozjs.c src/javascript.h
 
-src_pacrunner_LDADD = @MOZJS_LIBS@ @CURL_LIBS@ \
+src_pacrunner_LDADD = $(builtin_libadd) @MOZJS_LIBS@ \
 				@GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@ -ldl
 
 src_pacrunner_LDFLAGS = -Wl,--export-dynamic
@@ -69,10 +74,10 @@ noinst_PROGRAMS = unit/test-mozjs
 unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
 				src/proxy.c src/download.c src/mozjs.c
 
-unit_test_mozjs_LDADD = @MOZJS_LIBS@ @CURL_LIBS@ @GLIB_LIBS@
+unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@
 
-AM_CFLAGS = @GLIB_CFLAGS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ $(builtin_cflags) \
-					@MOZJS_CFLAGS@ @CURL_CFLAGS@ \
+AM_CFLAGS = @GLIB_CFLAGS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ @MOZJS_CFLAGS@ \
+					$(builtin_cflags) \
 					-DPACRUNNER_PLUGIN_BUILTIN \
 					-DPLUGINDIR=\""$(plugindir)"\"
 
