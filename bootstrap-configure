@@ -11,4 +11,5 @@ fi
 		--mandir=/usr/share/man \
 		--disable-datafiles \
 		--enable-libproxy \
+		--enable-curl \
 		--enable-capng $*

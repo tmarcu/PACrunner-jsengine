@@ -19,10 +19,12 @@ builtin_sources =
 builtin_cflags =
 builtin_libadd =
 
+if CURL
 builtin_modules += curl
 builtin_sources += plugins/curl.c
 builtin_cflags += @CURL_CFLAGS@
 builtin_libadd += @CURL_LIBS@
+endif
 
 sbin_PROGRAMS = src/pacrunner
 

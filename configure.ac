@@ -93,11 +93,6 @@ else
 fi
 AC_SUBST(DBUS_DATADIR)
 
-PKG_CHECK_MODULES(CURL, libcurl >= 7.16, dummy=yes,
-				AC_MSG_ERROR(CURL >= 7.16 is required))
-AC_SUBST(CURL_CFLAGS)
-AC_SUBST(CURL_LIBS)
-
 AC_ARG_ENABLE(capng, AC_HELP_STRING([--enable-capng],
 		[enable capabilities support]), [enable_capng=${enableval}])
 if (test "${enable_capng}" = "yes"); then
@@ -120,6 +115,16 @@ if (test "${enable_threads}" = "yes"); then
 	GLIB_CFLAGS="$GLIB_CFLAGS $GTHREAD_CFLAGS"
 	GLIB_LIBS="$GLIB_LIBS $GTHREAD_LIBS"
 fi
+
+AC_ARG_ENABLE(curl, AC_HELP_STRING([--enable-curl],
+		[enable CURL plugin support]), [enable_capng=${enableval}])
+if (test "${enable_curl}" = "yes"); then
+	PKG_CHECK_MODULES(CURL, libcurl >= 7.16, dummy=yes,
+				AC_MSG_ERROR(CURL >= 7.16 is required))
+	AC_SUBST(CURL_CFLAGS)
+	AC_SUBST(CURL_LIBS)
+fi
+AM_CONDITIONAL(CURL, test "${enable_curl}" = "yes")
 
 AC_ARG_ENABLE(test, AC_HELP_STRING([--enable-test],
 		[enable test/example scripts]), [enable_test=${enableval}])
