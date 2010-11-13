@@ -161,6 +161,7 @@ int main(int argc, char *argv[])
 	__pacrunner_download_init();
 	__pacrunner_manager_init(conn);
 	__pacrunner_client_init(conn);
+	__pacrunner_manual_init();
 	__pacrunner_mozjs_init();
 	__pacrunner_plugin_init();
 
@@ -173,6 +174,7 @@ int main(int argc, char *argv[])
 
 	__pacrunner_plugin_cleanup();
 	__pacrunner_mozjs_cleanup();
+	__pacrunner_manual_cleanup();
 	__pacrunner_client_cleanup();
 	__pacrunner_manager_cleanup();
 	__pacrunner_download_cleanup();

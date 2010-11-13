@@ -89,6 +89,11 @@ void __pacrunner_manager_cleanup();
 int __pacrunner_client_init(DBusConnection *conn);
 void __pacrunner_client_cleanup();
 
+int __pacrunner_manual_init(void);
+void __pacrunner_manual_cleanup(void);
+const char *__pacrunner_manual_execute(const char *url, const char *host,
+					char **servers, char **exludes);
+
 int __pacrunner_mozjs_init(void);
 void __pacrunner_mozjs_cleanup(void);
 int __pacrunner_mozjs_set_proxy(struct pacrunner_proxy *proxy);
