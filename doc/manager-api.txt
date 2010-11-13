@@ -51,7 +51,7 @@ Methods		object CreateProxyConfiguration(dict settings)
 				List of proxy servers. This value is only
 				valid when method is set to "manual".
 
-			array{string} Excludes [optiona]
+			array{string} Excludes [optional]
 
 				List of hosts to exclude from proxy lookup.
 
