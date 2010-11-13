@@ -38,6 +38,8 @@
 
 #include "pacrunner.h"
 
+static GStaticMutex mozjs_mutex = G_STATIC_MUTEX_INIT;
+
 struct pacrunner_proxy *current_proxy = NULL;
 
 static int getaddr(const char *node, char *host, size_t hostlen)
@@ -227,6 +229,7 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 		JS_free(jsctx, tmpurl);
 		return NULL;
 	}
+	g_static_mutex_lock(&mozjs_mutex);
 
 	JS_BeginRequest(jsctx);
 
@@ -241,6 +244,8 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	JS_EndRequest(jsctx);
 
 	JS_MaybeGC(jsctx);
+
+	g_static_mutex_unlock(&mozjs_mutex);
 
 	if (result) {
 		answer = JS_GetStringBytes(JS_ValueToString(jsctx, rval));
