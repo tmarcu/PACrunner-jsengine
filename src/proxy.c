@@ -34,7 +34,8 @@ struct pacrunner_proxy {
 	enum pacrunner_proxy_method method;
 	char *url;
 	char *script;
-	char *server;
+	char **servers;
+	char **excludes;
 	char *result;
 };
 
@@ -80,8 +81,11 @@ static void reset_proxy(struct pacrunner_proxy *proxy)
 	g_free(proxy->script);
 	proxy->script = NULL;
 
-	g_free(proxy->server);
-	proxy->server = NULL;
+	g_strfreev(proxy->servers);
+	proxy->servers = NULL;
+
+	g_strfreev(proxy->excludes);
+	proxy->excludes = NULL;
 
 	g_free(proxy->result);
 	proxy->result = NULL;
@@ -168,11 +172,18 @@ int pacrunner_proxy_set_manual(struct pacrunner_proxy *proxy,
 	if (err < 0)
 		return err;
 
-	g_free(proxy->server);
-	proxy->server = g_strdup(servers[0]);
+	g_strfreev(proxy->servers);
+	proxy->servers = servers;
+
+	g_strfreev(proxy->excludes);
+	proxy->excludes = excludes;
 
 	g_free(proxy->result);
-	proxy->result = g_strdup_printf("PROXY %s", proxy->server);
+
+	if (proxy->servers[0] == NULL)
+		proxy->result = g_strdup("DIRECT");
+	else
+		proxy->result = g_strdup_printf("PROXY %s", proxy->servers[0]);
 
 	pacrunner_proxy_enable(proxy);
 
