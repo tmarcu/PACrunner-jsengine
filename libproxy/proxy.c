@@ -83,10 +83,10 @@ static char **extract_result(const char *str, const char *scheme)
 	}
 
 	if (strncmp(str, "PROXY ", 6) == 0) {
-		int len = strlen(scheme) + strlen(str + 6) + 4;
+		int len = strlen(str + 6) + 8;
 		result[0] = malloc(len);
 		if (result[0] != NULL)
-			sprintf(result[0], "%s://%s", scheme, str + 6);
+			sprintf(result[0], "http://%s", str + 6);
 		return result;
 	}
 
