@@ -123,7 +123,7 @@ const char *pacrunner_proxy_get_script(struct pacrunner_proxy *proxy)
 	return proxy->script;
 }
 
-int pacrunner_proxy_set_method(struct pacrunner_proxy *proxy,
+static int set_method(struct pacrunner_proxy *proxy,
 					enum pacrunner_proxy_method method)
 {
 	DBG("proxy %p method %d", proxy, method);
@@ -148,7 +148,7 @@ int pacrunner_proxy_set_direct(struct pacrunner_proxy *proxy)
 	if (proxy == NULL)
 		return -EINVAL;
 
-	return pacrunner_proxy_set_method(proxy, PACRUNNER_PROXY_METHOD_DIRECT);
+	return set_method(proxy, PACRUNNER_PROXY_METHOD_DIRECT);
 }
 
 static void download_callback(char *content, void *user_data)
@@ -180,7 +180,7 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy, const char *url)
 	if (proxy == NULL)
 		return -EINVAL;
 
-	err = pacrunner_proxy_set_method(proxy, PACRUNNER_PROXY_METHOD_AUTO);
+	err = set_method(proxy, PACRUNNER_PROXY_METHOD_AUTO);
 	if (err < 0)
 		return err;
 
@@ -215,7 +215,7 @@ int pacrunner_proxy_set_script(struct pacrunner_proxy *proxy,
 	if (script == NULL)
 		return -EINVAL;
 
-	err = pacrunner_proxy_set_method(proxy, PACRUNNER_PROXY_METHOD_AUTO);
+	err = set_method(proxy, PACRUNNER_PROXY_METHOD_AUTO);
 	if (err < 0)
 		return err;
 
@@ -243,7 +243,7 @@ int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
 	if (server == NULL)
 		return -EINVAL;
 
-	err = pacrunner_proxy_set_method(proxy, PACRUNNER_PROXY_METHOD_MANUAL);
+	err = set_method(proxy, PACRUNNER_PROXY_METHOD_MANUAL);
 	if (err < 0)
 		return err;
 

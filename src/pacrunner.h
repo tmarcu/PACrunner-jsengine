@@ -61,8 +61,6 @@ void pacrunner_proxy_unref(struct pacrunner_proxy *proxy);
 const char *pacrunner_proxy_get_interface(struct pacrunner_proxy *proxy);
 const char *pacrunner_proxy_get_script(struct pacrunner_proxy *proxy);
 
-int pacrunner_proxy_set_method(struct pacrunner_proxy *proxy,
-					enum pacrunner_proxy_method method);
 int pacrunner_proxy_set_direct(struct pacrunner_proxy *proxy);
 int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy, const char *url);
 int pacrunner_proxy_set_script(struct pacrunner_proxy *proxy,
