@@ -78,14 +78,8 @@ static void disconnect_callback(DBusConnection *conn, void *user_data)
 }
 
 static struct proxy_config *create_config(DBusConnection *conn,
-						const char *sender,
-						const char *method,
-						const char *url,
-						const char *script,
-						const char *server,
-						const char *interface,
-						const char *domainname,
-						const char *nameserver)
+			const char *sender, const char *interface,
+			const char *domainname, const char *nameserver)
 {
 	struct proxy_config *config;
 
@@ -111,26 +105,6 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	config->conn = conn;
 	config->watch = g_dbus_add_disconnect_watch(conn, sender,
 					disconnect_callback, config, NULL);
-
-	if (g_strcmp0(method, "manual") == 0) {
-		if (pacrunner_proxy_set_server(config->proxy, server) < 0)
-			pacrunner_error("Failed to set proxy server");
-
-		return config;
-	} else if (g_strcmp0(method, "auto") != 0) {
-		if (pacrunner_proxy_set_direct(config->proxy) < 0)
-			pacrunner_error("Failed to set direct proxy");
-
-		return config;
-	}
-
-	if (script != NULL) {
-		if (pacrunner_proxy_set_script(config->proxy, script) < 0)
-			pacrunner_error("Failed to set provided PAC script");
-	} else if (url != NULL) {
-		if (pacrunner_proxy_set_auto(config->proxy, url) < 0)
-			pacrunner_error("Failed to set PAC script URL");
-	}
 
 	return config;
 }
@@ -221,12 +195,32 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"No proxy method specified");
 
-	config = create_config(conn, sender, method, url, script, server,
-					interface, domainname, nameserver);
+	config = create_config(conn, sender, interface, domainname, nameserver);
 	if (config == NULL)
 		return g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"Memory allocation failed");
+
+	if (g_str_equal(method, "direct") == TRUE) {
+		if (pacrunner_proxy_set_direct(config->proxy) < 0)
+			pacrunner_error("Failed to set direct proxy");
+	} else if (g_str_equal(method, "manual") == TRUE) {
+		if (pacrunner_proxy_set_server(config->proxy, server) < 0)
+			pacrunner_error("Failed to set proxy server");
+	} else if (g_str_equal(method, "auto") == FALSE) {
+		destroy_config(config);
+		return g_dbus_create_error(msg,
+					PACRUNNER_ERROR_INTERFACE ".Failed",
+					"Invalid proxy method specified");
+	}
+
+	if (script != NULL) {
+		if (pacrunner_proxy_set_script(config->proxy, script) < 0)
+			pacrunner_error("Failed to set provided PAC script");
+	} else if (url != NULL) {
+		if (pacrunner_proxy_set_auto(config->proxy, url) < 0)
+			pacrunner_error("Failed to set PAC script URL");
+	}
 
 	g_hash_table_insert(config_list, config->path, config);
 
