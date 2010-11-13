@@ -151,6 +151,34 @@ int pacrunner_proxy_set_direct(struct pacrunner_proxy *proxy)
 	return set_method(proxy, PACRUNNER_PROXY_METHOD_DIRECT);
 }
 
+int pacrunner_proxy_set_manual(struct pacrunner_proxy *proxy,
+					char **servers, char **excludes)
+{
+	int err;
+
+	DBG("proxy %p servers %p excludes %p", proxy, servers, excludes);
+
+	if (proxy == NULL)
+		return -EINVAL;
+
+	if (servers == NULL)
+		return -EINVAL;
+
+	err = set_method(proxy, PACRUNNER_PROXY_METHOD_MANUAL);
+	if (err < 0)
+		return err;
+
+	g_free(proxy->server);
+	proxy->server = g_strdup(servers[0]);
+
+	g_free(proxy->result);
+	proxy->result = g_strdup_printf("PROXY %s", proxy->server);
+
+	pacrunner_proxy_enable(proxy);
+
+	return 0;
+}
+
 static void download_callback(char *content, void *user_data)
 {
 	struct pacrunner_proxy *proxy = user_data;
@@ -171,11 +199,12 @@ done:
 	pacrunner_proxy_unref(proxy);
 }
 
-int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy, const char *url)
+int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy,
+					const char *url, const char *script)
 {
 	int err;
 
-	DBG("proxy %p url %s", proxy, url);
+	DBG("proxy %p url %s script %p", proxy, url, script);
 
 	if (proxy == NULL)
 		return -EINVAL;
@@ -187,8 +216,18 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy, const char *url)
 	g_free(proxy->url);
 	proxy->url = g_strdup(url);
 
-	g_free(proxy->script);
-	proxy->script = NULL;
+	if (proxy->url == NULL) {
+		g_free(proxy->script);
+		proxy->script = g_strdup(script);
+	} else {
+		g_free(proxy->script);
+		proxy->script = NULL;
+	}
+
+	if (proxy->script != NULL) {
+		pacrunner_proxy_enable(proxy);
+		return 0;
+	}
 
 	pacrunner_proxy_ref(proxy);
 
@@ -198,62 +237,6 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy, const char *url)
 		pacrunner_proxy_unref(proxy);
 		return err;
 	}
-
-	return 0;
-}
-
-int pacrunner_proxy_set_script(struct pacrunner_proxy *proxy,
-						const char *script)
-{
-	int err;
-
-	DBG("proxy %p script %p", proxy, script);
-
-	if (proxy == NULL)
-		return -EINVAL;
-
-	if (script == NULL)
-		return -EINVAL;
-
-	err = set_method(proxy, PACRUNNER_PROXY_METHOD_AUTO);
-	if (err < 0)
-		return err;
-
-	g_free(proxy->url);
-	proxy->url = NULL;
-
-	g_free(proxy->script);
-	proxy->script = g_strdup(script);
-
-	pacrunner_proxy_enable(proxy);
-
-	return 0;
-}
-
-int pacrunner_proxy_set_server(struct pacrunner_proxy *proxy,
-						const char *server)
-{
-	int err;
-
-	DBG("proxy %p server %s", proxy, server);
-
-	if (proxy == NULL)
-		return -EINVAL;
-
-	if (server == NULL)
-		return -EINVAL;
-
-	err = set_method(proxy, PACRUNNER_PROXY_METHOD_MANUAL);
-	if (err < 0)
-		return err;
-
-	g_free(proxy->server);
-	proxy->server = g_strdup(server);
-
-	g_free(proxy->result);
-	proxy->result = g_strdup_printf("PROXY %s", server);
-
-	pacrunner_proxy_enable(proxy);
 
 	return 0;
 }

@@ -35,8 +35,8 @@ struct proxy_config {
 	DBusConnection *conn;
 	guint watch;
 
-	char *domainname;
-	char *nameserver;
+	char **domains;
+	char **nameservers;
 
 	struct pacrunner_proxy *proxy;
 };
@@ -58,8 +58,8 @@ static void destroy_config(gpointer data)
 	if (config->watch > 0)
 		g_dbus_remove_watch(config->conn, config->watch);
 
-	g_free(config->nameserver);
-	g_free(config->domainname);
+	g_strfreev(config->domains);
+	g_strfreev(config->nameservers);
 
 	g_free(config->sender);
 	g_free(config->path);
@@ -78,8 +78,7 @@ static void disconnect_callback(DBusConnection *conn, void *user_data)
 }
 
 static struct proxy_config *create_config(DBusConnection *conn,
-			const char *sender, const char *interface,
-			const char *domainname, const char *nameserver)
+			const char *sender, const char *interface)
 {
 	struct proxy_config *config;
 
@@ -97,9 +96,6 @@ static struct proxy_config *create_config(DBusConnection *conn,
 							next_config_number++);
 	config->sender = g_strdup(sender);
 
-	config->domainname = g_strdup(domainname);
-	config->nameserver = g_strdup(nameserver);
-
 	DBG("path %s", config->path);
 
 	config->conn = conn;
@@ -109,15 +105,45 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	return config;
 }
 
+static char **extract_string_array(DBusMessageIter *array)
+{
+	char **str;
+	int index;
+
+	str = g_try_new(char *, 11);
+	if (str == NULL)
+		return NULL;
+
+	index = 0;
+
+	while (dbus_message_iter_get_arg_type(array) == DBUS_TYPE_STRING) {
+		const char *value = NULL;
+
+		dbus_message_iter_get_basic(array, &value);
+
+		if (value == NULL || index > 9)
+			break;
+
+		str[index++] = g_strdup(value);
+
+		dbus_message_iter_next(array);
+	}
+
+	str[index] = NULL;
+
+	return str;
+}
+
 static DBusMessage *create_proxy_config(DBusConnection *conn,
 					DBusMessage *msg, void *user_data)
 {
+	DBusMessage *reply;
 	DBusMessageIter iter, array;
 	struct proxy_config *config;
-	const char *sender, *method = NULL;
+	const char *sender, *method = NULL, *interface = NULL;
 	const char *url = NULL, *script = NULL;
-	const char *server = NULL, *exclude = NULL;
-	const char *interface = NULL, *domainname = NULL, *nameserver = NULL;
+	char **servers = NULL, **excludes = NULL;
+	char **domains = NULL, **nameservers = NULL;
 
 	sender = dbus_message_get_sender(msg);
 
@@ -162,21 +188,17 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 				break;
 
 			if (g_str_equal(key, "Servers") == TRUE) {
-				dbus_message_iter_get_basic(&list, &server);
-				if (strlen(server) == 0)
-					server = NULL;
+				g_strfreev(servers);
+				servers = extract_string_array(&list);
 			} else if (g_str_equal(key, "Excludes") == TRUE) {
-				dbus_message_iter_get_basic(&list, &exclude);
-				if (strlen(exclude) == 0)
-					exclude = NULL;
+				g_strfreev(excludes);
+				excludes = extract_string_array(&list);
 			} else if (g_str_equal(key, "Domains") == TRUE) {
-				dbus_message_iter_get_basic(&list, &domainname);
-				if (strlen(domainname) == 0)
-					domainname = NULL;
+				g_strfreev(domains);
+				domains = extract_string_array(&list);
 			} else if (g_str_equal(key, "Nameservers") == TRUE) {
-				dbus_message_iter_get_basic(&list, &nameserver);
-				if (strlen(nameserver) == 0)
-					nameserver = NULL;
+				g_strfreev(nameservers);
+				nameservers = extract_string_array(&list);
 			}
 			break;
 		}
@@ -184,48 +206,65 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 		dbus_message_iter_next(&array);
 	}
 
-	DBG("sender %s method %s", sender, method);
-	DBG("url %s script %p server %s exclude %s",
-				url, script, server, exclude);
-	DBG("interface %s domainname %s nameserver %s",
-				interface, domainname, nameserver);
+	DBG("sender %s method %s interface %s", sender, method, interface);
+	DBG("url %s script %p", url, script);
 
-	if (method == NULL)
-		return g_dbus_create_error(msg,
+	if (method == NULL) {
+		reply = g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"No proxy method specified");
+		goto done;
+	}
 
-	config = create_config(conn, sender, interface, domainname, nameserver);
-	if (config == NULL)
-		return g_dbus_create_error(msg,
+	config = create_config(conn, sender, interface);
+	if (config == NULL) {
+		reply = g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"Memory allocation failed");
+		goto done;
+	}
+
+	config->domains = domains;
+	config->nameservers = nameservers;
+
+	domains = NULL;
+	nameservers = NULL;
 
 	if (g_str_equal(method, "direct") == TRUE) {
 		if (pacrunner_proxy_set_direct(config->proxy) < 0)
 			pacrunner_error("Failed to set direct proxy");
 	} else if (g_str_equal(method, "manual") == TRUE) {
-		if (pacrunner_proxy_set_server(config->proxy, server) < 0)
-			pacrunner_error("Failed to set proxy server");
-	} else if (g_str_equal(method, "auto") == FALSE) {
+		if (pacrunner_proxy_set_manual(config->proxy,
+						servers, excludes) < 0)
+			pacrunner_error("Failed to set proxy servers");
+
+		servers = NULL;
+		excludes = NULL;
+	} else if (g_str_equal(method, "auto") == TRUE) {
+		if (pacrunner_proxy_set_auto(config->proxy, url, script) < 0)
+			pacrunner_error("Failed to set auto proxy");
+	} else {
 		destroy_config(config);
-		return g_dbus_create_error(msg,
+		reply = g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"Invalid proxy method specified");
-	}
-
-	if (script != NULL) {
-		if (pacrunner_proxy_set_script(config->proxy, script) < 0)
-			pacrunner_error("Failed to set provided PAC script");
-	} else if (url != NULL) {
-		if (pacrunner_proxy_set_auto(config->proxy, url) < 0)
-			pacrunner_error("Failed to set PAC script URL");
+		goto done;
 	}
 
 	g_hash_table_insert(config_list, config->path, config);
 
-	return g_dbus_create_reply(msg, DBUS_TYPE_OBJECT_PATH, &config->path,
+
+	reply = g_dbus_create_reply(msg, DBUS_TYPE_OBJECT_PATH, &config->path,
 							DBUS_TYPE_INVALID);
+
+done:
+	g_strfreev(servers);
+	g_strfreev(excludes);
+
+	g_strfreev(domains);
+	g_strfreev(nameservers);
+
+	return reply;
 }
 
 static DBusMessage *destroy_proxy_config(DBusConnection *conn,
