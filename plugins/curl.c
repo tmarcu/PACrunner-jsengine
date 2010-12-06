@@ -81,9 +81,6 @@ static void check_sockets(CURLM *multi, CURLMcode result, int handles)
 
 		DBG("finished %s result %d", eff_url, msg->data.result);
 
-		curl_multi_remove_handle(multi, easy);
-		curl_easy_cleanup(easy);
-
 		if (download->callback) {
 			if (msg->data.result == 0) {
 				str = g_string_free(download->content, FALSE);
@@ -94,6 +91,9 @@ static void check_sockets(CURLM *multi, CURLMcode result, int handles)
 			}
 		} else
 			g_string_free(download->content, TRUE);
+
+		curl_multi_remove_handle(multi, easy);
+		curl_easy_cleanup(easy);
 
 		g_free(download->url);
 		g_free(download);
