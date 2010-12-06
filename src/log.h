@@ -39,7 +39,7 @@ struct pacrunner_debug_desc {
 #define DBG(fmt, arg...) do { \
 	static struct pacrunner_debug_desc __pacrunner_debug_desc \
 	__attribute__((used, section("__debug"), aligned(8))) = { \
-		.file = __FILE__, .flags = PACRUNNER_DEBUG_FLAG_DEFAULT, \
+		NULL, __FILE__, PACRUNNER_DEBUG_FLAG_DEFAULT, \
 	}; \
 	if (__pacrunner_debug_desc.flags & PACRUNNER_DEBUG_FLAG_PRINT) \
 		pacrunner_debug("%s:%s() " fmt, \
