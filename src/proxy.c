@@ -294,7 +294,7 @@ int pacrunner_proxy_disable(struct pacrunner_proxy *proxy)
 	return 0;
 }
 
-const char *pacrunner_proxy_lookup(const char *url, const char *host)
+char *pacrunner_proxy_lookup(const char *url, const char *host)
 {
 	GList *list;
 	struct pacrunner_proxy *selected_proxy = NULL;
@@ -302,7 +302,7 @@ const char *pacrunner_proxy_lookup(const char *url, const char *host)
 	DBG("url %s host %s", url, host);
 
 	if (proxy_list == NULL)
-		return "DIRECT";
+		return NULL;
 
 	g_static_mutex_lock(&proxy_mutex);
 
@@ -320,7 +320,7 @@ const char *pacrunner_proxy_lookup(const char *url, const char *host)
 	g_static_mutex_unlock(&proxy_mutex);
 
 	if (selected_proxy == NULL)
-		return "DIRECT";
+		return NULL;
 
 	switch (selected_proxy->method) {
 	case PACRUNNER_PROXY_METHOD_UNKNOWN:
@@ -334,7 +334,7 @@ const char *pacrunner_proxy_lookup(const char *url, const char *host)
 		return __pacrunner_mozjs_execute(url, host);
 	}
 
-	return "DIRECT";
+	return NULL;
 }
 
 int __pacrunner_proxy_init(void)

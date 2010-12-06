@@ -25,27 +25,20 @@
 
 #include "pacrunner.h"
 
-static char *last_result;
-
-const char *__pacrunner_manual_execute(const char *url, const char *host,
-					char **servers, char **exludes)
+char *__pacrunner_manual_execute(const char *url, const char *host,
+				 char **servers, char **exludes)
 {
 	DBG("url %s host %s", url, host);
 
 	if (servers == NULL || servers[0] == NULL)
-		return "DIRECT";
+		return NULL;
 
-	g_free(last_result);
-	last_result = g_strdup_printf("PROXY %s", servers[0]);
-
-	return last_result;
+	return g_strdup_printf("PROXY %s", servers[0]);
 }
 
 int __pacrunner_manual_init(void)
 {
 	DBG("");
-
-	last_result = NULL;
 
 	return 0;
 }
@@ -53,6 +46,4 @@ int __pacrunner_manual_init(void)
 void __pacrunner_manual_cleanup(void)
 {
 	DBG("");
-
-	g_free(last_result);
 }

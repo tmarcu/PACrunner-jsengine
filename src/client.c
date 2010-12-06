@@ -45,7 +45,9 @@ static void jsrun_free(gpointer data)
 static gpointer jsrun_thread(gpointer data)
 {
 	struct jsrun_data *jsrun = data;
-	const char *sender, *url, *host, *result;
+	const char *sender, *url, *host;
+	char *result;
+	static char direct[] = "DIRECT";
 
 	sender = dbus_message_get_sender(jsrun->msg);
 
@@ -62,10 +64,13 @@ static gpointer jsrun_thread(gpointer data)
 	DBG("result %s", result);
 
 	if (result == NULL)
-		result = "DIRECT";
+		result = direct;
 
 	g_dbus_send_reply(jsrun->conn, jsrun->msg, DBUS_TYPE_STRING, &result,
 							DBUS_TYPE_INVALID);
+
+	if (result != direct)
+		g_free(result);
 
 	jsrun_free(jsrun);
 

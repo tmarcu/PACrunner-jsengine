@@ -210,7 +210,7 @@ int __pacrunner_mozjs_set_proxy(struct pacrunner_proxy *proxy)
 	return 0;
 }
 
-const char *__pacrunner_mozjs_execute(const char *url, const char *host)
+char *__pacrunner_mozjs_execute(const char *url, const char *host)
 {
 	JSBool result;
 	jsval rval, args[2];
@@ -219,7 +219,7 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	DBG("url %s host %s", url, host);
 
 	if (jsctx == NULL)
-		return "DIRECT";
+		return NULL;
 
 	tmpurl = JS_strdup(jsctx, url);
 	tmphost = JS_strdup(jsctx, host);
@@ -249,7 +249,7 @@ const char *__pacrunner_mozjs_execute(const char *url, const char *host)
 
 	if (result) {
 		answer = JS_GetStringBytes(JS_ValueToString(jsctx, rval));
-		return answer;
+		return g_strdup(answer);
 	}
 
 	return NULL;

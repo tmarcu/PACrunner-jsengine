@@ -70,7 +70,7 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy,
 int pacrunner_proxy_enable(struct pacrunner_proxy *proxy);
 int pacrunner_proxy_disable(struct pacrunner_proxy *proxy);
 
-const char *pacrunner_proxy_lookup(const char *url, const char *host);
+char *pacrunner_proxy_lookup(const char *url, const char *host);
 
 int __pacrunner_proxy_init(void);
 void __pacrunner_proxy_cleanup(void);
@@ -91,10 +91,10 @@ void __pacrunner_client_cleanup();
 
 int __pacrunner_manual_init(void);
 void __pacrunner_manual_cleanup(void);
-const char *__pacrunner_manual_execute(const char *url, const char *host,
-					char **servers, char **exludes);
+char *__pacrunner_manual_execute(const char *url, const char *host,
+				 char **servers, char **exludes);
 
 int __pacrunner_mozjs_init(void);
 void __pacrunner_mozjs_cleanup(void);
 int __pacrunner_mozjs_set_proxy(struct pacrunner_proxy *proxy);
-const char *__pacrunner_mozjs_execute(const char *url, const char *host);
+char *__pacrunner_mozjs_execute(const char *url, const char *host);
