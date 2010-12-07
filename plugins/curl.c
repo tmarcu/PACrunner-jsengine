@@ -118,7 +118,11 @@ static gboolean event_callback(GIOChannel *channel,
 	if (condition & G_IO_OUT)
 		action |= CURL_CSELECT_OUT;
 
-	result = curl_multi_socket_action(multi, sockfd, action, &handles);
+	do {
+		result = curl_multi_socket_action(multi, sockfd, action, &handles);
+		DBG("curl_multi_socket_action returns %d", result);
+
+	} while (result == CURLM_CALL_MULTI_SOCKET);
 
 	check_sockets(multi, result, handles);
 
@@ -194,9 +198,14 @@ static gboolean timeout_callback(gpointer user_data)
 	CURLMcode result;
 	int handles;
 
+	DBG("");
+
 	timeout_source = 0;
 
-	result = curl_multi_socket_all(multi, &handles);
+	do {
+		result = curl_multi_socket_all(multi, &handles);
+		DBG("curl_multi_socket_all returns %d", result);
+	} while (result == CURLM_CALL_MULTI_SOCKET);
 
 	check_sockets(multi, result, handles);
 
