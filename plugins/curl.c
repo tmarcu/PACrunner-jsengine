@@ -117,6 +117,8 @@ static gboolean event_callback(GIOChannel *channel,
 		action |= CURL_CSELECT_IN;
 	if (condition & G_IO_OUT)
 		action |= CURL_CSELECT_OUT;
+	if (condition & (G_IO_HUP|G_IO_ERR|G_IO_NVAL))
+		action |= CURL_CSELECT_ERR;
 
 	do {
 		result = curl_multi_socket_action(multi, sockfd, action, &handles);
@@ -158,8 +160,9 @@ static int socket_callback(CURL *easy, curl_socket_t sockfd, int what,
 	case CURL_POLL_IN:
 		DBG("poll in");
 		channel = g_io_channel_unix_new(sockfd);
-		source = g_io_add_watch(channel, G_IO_IN,
-						event_callback, multi);
+		source = g_io_add_watch(channel,
+					G_IO_IN|G_IO_HUP|G_IO_ERR|G_IO_NVAL,
+					event_callback, multi);
 		g_io_channel_unref(channel);
 
 		curl_multi_assign(multi, sockfd, GUINT_TO_POINTER(source));
@@ -167,8 +170,9 @@ static int socket_callback(CURL *easy, curl_socket_t sockfd, int what,
 	case CURL_POLL_OUT:
 		DBG("poll out");
 		channel = g_io_channel_unix_new(sockfd);
-		source = g_io_add_watch(channel, G_IO_OUT,
-						event_callback, multi);
+		source = g_io_add_watch(channel,
+					G_IO_OUT|G_IO_HUP|G_IO_ERR|G_IO_NVAL,
+					event_callback, multi);
 		g_io_channel_unref(channel);
 
 		curl_multi_assign(multi, sockfd, GUINT_TO_POINTER(source));
@@ -176,8 +180,9 @@ static int socket_callback(CURL *easy, curl_socket_t sockfd, int what,
 	case CURL_POLL_INOUT:
 		DBG("poll in/out");
 		channel = g_io_channel_unix_new(sockfd);
-		source = g_io_add_watch(channel, G_IO_IN | G_IO_OUT,
-						event_callback, multi);
+		source = g_io_add_watch(channel,
+					G_IO_IN|G_IO_OUT|G_IO_HUP|G_IO_ERR|G_IO_NVAL,
+					event_callback, multi);
 		g_io_channel_unref(channel);
 
 		curl_multi_assign(multi, sockfd, GUINT_TO_POINTER(source));
