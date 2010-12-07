@@ -192,6 +192,7 @@ static int socket_callback(CURL *easy, curl_socket_t sockfd, int what,
 	return 0;
 }
 
+static int timer_callback(CURLM *multi, long timeout_ms, void *user_data);
 static gboolean timeout_callback(gpointer user_data)
 {
 	CURLM *multi = user_data;
@@ -209,6 +210,26 @@ static gboolean timeout_callback(gpointer user_data)
 
 	check_sockets(multi, result, handles);
 
+	/* Sometimes, curl doesn't set a new timeout when it should. */
+	if (handles && !timeout_source) {
+		long next_timer = -1;
+
+		curl_multi_timeout(multi, &next_timer);
+
+		/* From the curl_multi_timeout() man page:
+		   Note: if libcurl returns a -1 timeout here, it just means
+		   that libcurl currently has no stored timeout value. You
+		   must not wait too long (more than a few seconds perhaps)
+		   before you call curl_multi_perform() again.
+
+		   With curl < 7.21.2 it's very true; we'll never poll for
+		   completion of the asynchronous DNS lookup otherwise.
+		*/
+		if (next_timer == -1)
+			next_timer = 500;
+
+		timer_callback(multi, next_timer, NULL);
+	}
 	return FALSE;
 }
 
