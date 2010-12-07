@@ -247,8 +247,12 @@ static int timer_callback(CURLM *multi, long timeout_ms, void *user_data)
 	if (timeout_ms < 0)
 		return 0;
 
-	timeout_source = g_timeout_add_seconds(interval,
-						timeout_callback, multi);
+	if (interval)
+		timeout_source = g_timeout_add_seconds(interval,
+						       timeout_callback, multi);
+	else
+		timeout_source = g_timeout_add(timeout_ms,
+					       timeout_callback, multi);
 
 	return 0;
 }
