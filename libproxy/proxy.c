@@ -66,7 +66,7 @@ void px_proxy_factory_free(pxProxyFactory *factory)
 	free(factory);
 }
 
-static char **extract_result(const char *str, const char *scheme)
+static char **extract_result(const char *str)
 {
 	char **result;
 
@@ -142,16 +142,15 @@ char **px_proxy_factory_get_proxies(pxProxyFactory *factory, const char *url)
 
 	dbus_message_append_args(msg, DBUS_TYPE_STRING, &url,
 				DBUS_TYPE_STRING, &host, DBUS_TYPE_INVALID);
+	free(scheme);
 
 	reply = dbus_connection_send_with_reply_and_block(factory->conn,
 							msg, -1, NULL);
 
 	dbus_message_unref(msg);
 
-	if (reply == NULL) {
-		free(scheme);
+	if (reply == NULL)
 		goto direct;
-	}
 
 	dbus_message_get_args(reply, NULL, DBUS_TYPE_STRING, &str,
 							DBUS_TYPE_INVALID);
@@ -159,9 +158,7 @@ char **px_proxy_factory_get_proxies(pxProxyFactory *factory, const char *url)
 	if (str == NULL || strlen(str) == 0)
 		str = "DIRECT";
 
-	result = extract_result(str, scheme);
-
-	free(scheme);
+	result = extract_result(str);
 
 	dbus_message_unref(reply);
 
