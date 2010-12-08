@@ -209,8 +209,9 @@ static gboolean timeout_callback(gpointer user_data)
 	timeout_source = 0;
 
 	do {
-		result = curl_multi_socket_all(multi, &handles);
-		DBG("curl_multi_socket_all returns %d", result);
+		result = curl_multi_socket_action(multi, CURL_SOCKET_TIMEOUT,
+						  0, &handles);
+		DBG("curl_multi_socket_action returns %d", result);
 	} while (result == CURLM_CALL_MULTI_SOCKET);
 
 	check_sockets(multi, result, handles);
