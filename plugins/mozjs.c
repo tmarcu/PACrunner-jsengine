@@ -220,7 +220,7 @@ static char * mozjs_execute(const char *url, const char *host)
 	DBG("url %s host %s", url, host);
 
 	if (jsctx == NULL)
-		return "DIRECT";
+		return NULL;
 
 	tmpurl = JS_strdup(jsctx, url);
 	tmphost = JS_strdup(jsctx, host);
@@ -250,7 +250,7 @@ static char * mozjs_execute(const char *url, const char *host)
 
 	if (result) {
 		answer = JS_GetStringBytes(JS_ValueToString(jsctx, rval));
-		return answer;
+		return g_strdup(answer);
 	}
 
 	return NULL;
