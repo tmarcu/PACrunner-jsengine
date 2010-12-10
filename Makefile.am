@@ -26,6 +26,13 @@ builtin_cflags += @CURL_CFLAGS@
 builtin_libadd += @CURL_LIBS@
 endif
 
+if MOZJS
+builtin_modules += mozjs
+builtin_sources += plugins/mozjs.c
+builtin_cflags += @MOZJS_CFLAGS@
+builtin_libadd += @MOZJS_LIBS@
+endif
+
 sbin_PROGRAMS = src/pacrunner
 
 src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
@@ -33,9 +40,9 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/log.h src/log.c src/plugin.h src/plugin.c \
 			src/download.h src/download.c \
 			src/client.c src/manager.c src/proxy.c \
-			src/manual.c src/mozjs.c src/js.h src/js.c src/javascript.h
+			src/manual.c src/js.h src/js.c src/javascript.h
 
-src_pacrunner_LDADD = $(builtin_libadd) @MOZJS_LIBS@ \
+src_pacrunner_LDADD = $(builtin_libadd) \
 				@GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@ -ldl
 
 src_pacrunner_LDFLAGS = -Wl,--export-dynamic
@@ -73,14 +80,17 @@ tools_proxy_SOURCES = tools/proxy.c
 tools_proxy_LDADD = libproxy/libproxy.la
 endif
 
+if MOZJS
 noinst_PROGRAMS = unit/test-mozjs
 
 unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
-			src/proxy.c src/manual.c src/download.c src/mozjs.c
+			src/proxy.c src/manual.c src/download.c \
+				src/js.c plugins/mozjs.c
 
 unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@
+endif
 
-AM_CFLAGS = @GLIB_CFLAGS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ @MOZJS_CFLAGS@ \
+AM_CFLAGS = @GLIB_CFLAGS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ \
 					$(builtin_cflags) \
 					-DPACRUNNER_PLUGIN_BUILTIN \
 					-DPLUGINDIR=\""$(plugindir)"\"
@@ -100,7 +110,8 @@ EXTRA_DIST = src/genbuiltin src/pacrunner.conf $(test_scripts) \
 			doc/architecture.txt doc/libproxy.txt \
 				doc/manager-api.txt doc/client-api.txt
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-libproxy --disable-datafiles
+DISTCHECK_CONFIGURE_FLAGS = --enable-libproxy --disable-datafiles \
+				--enable-mozjs
 
 MAINTAINERCLEANFILES = Makefile.in \
 	aclocal.m4 configure config.h.in config.sub config.guess \

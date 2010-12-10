@@ -37,6 +37,7 @@
 #include "javascript.h"
 
 #include "pacrunner.h"
+#include "js.h"
 
 static GStaticMutex mozjs_mutex = G_STATIC_MUTEX_INIT;
 
@@ -195,7 +196,7 @@ static void destroy_object(void)
 	jsobj = NULL;
 }
 
-int __pacrunner_mozjs_set_proxy(struct pacrunner_proxy *proxy)
+static int mozjs_set_proxy(struct pacrunner_proxy *proxy)
 {
 	DBG("proxy %p", proxy);
 
@@ -210,7 +211,7 @@ int __pacrunner_mozjs_set_proxy(struct pacrunner_proxy *proxy)
 	return 0;
 }
 
-char *__pacrunner_mozjs_execute(const char *url, const char *host)
+static char * mozjs_execute(const char *url, const char *host)
 {
 	JSBool result;
 	jsval rval, args[2];
@@ -219,7 +220,7 @@ char *__pacrunner_mozjs_execute(const char *url, const char *host)
 	DBG("url %s host %s", url, host);
 
 	if (jsctx == NULL)
-		return NULL;
+		return "DIRECT";
 
 	tmpurl = JS_strdup(jsctx, url);
 	tmphost = JS_strdup(jsctx, host);
@@ -249,26 +250,36 @@ char *__pacrunner_mozjs_execute(const char *url, const char *host)
 
 	if (result) {
 		answer = JS_GetStringBytes(JS_ValueToString(jsctx, rval));
-		return g_strdup(answer);
+		return answer;
 	}
 
 	return NULL;
 }
 
-int __pacrunner_mozjs_init(void)
+static struct pacrunner_js_driver mozjs_driver = {
+	.name		= "mozjs",
+	.set_proxy	= mozjs_set_proxy,
+	.execute	= mozjs_execute,
+};
+
+static int mozjs_init(void)
 {
 	DBG("");
 
 	jsrun = JS_NewRuntime(8 * 1024 * 1024);
 
-	return 0;
+	return pacrunner_js_driver_register(&mozjs_driver);
 }
 
-void __pacrunner_mozjs_cleanup(void)
+static void mozjs_exit(void)
 {
 	DBG("");
 
-	__pacrunner_mozjs_set_proxy(NULL);
+	pacrunner_js_driver_unregister(&mozjs_driver);
+
+	mozjs_set_proxy(NULL);
 
 	JS_DestroyRuntime(jsrun);
 }
+
+PACRUNNER_PLUGIN_DEFINE(mozjs, mozjs_init, mozjs_exit)

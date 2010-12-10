@@ -261,7 +261,7 @@ int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
 	if (proxy == NULL)
 		return -EIO;
 
-	__pacrunner_mozjs_set_proxy(proxy);
+	__pacrunner_js_set_proxy(proxy);
 
 	g_static_mutex_lock(&proxy_mutex);
 	proxy_list = g_list_append(proxy_list, proxy);
@@ -287,7 +287,7 @@ int pacrunner_proxy_disable(struct pacrunner_proxy *proxy)
 	proxy_list = g_list_remove_link(proxy_list, list);
 	g_static_mutex_unlock(&proxy_mutex);
 
-	__pacrunner_mozjs_set_proxy(NULL);
+	__pacrunner_js_set_proxy(NULL);
 
 	pacrunner_proxy_unref(proxy);
 
@@ -331,7 +331,7 @@ char *pacrunner_proxy_lookup(const char *url, const char *host)
 						selected_proxy->servers,
 						selected_proxy->excludes);
 	case PACRUNNER_PROXY_METHOD_AUTO:
-		return __pacrunner_mozjs_execute(url, host);
+		return __pacrunner_js_execute(url, host);
 	}
 
 	return NULL;

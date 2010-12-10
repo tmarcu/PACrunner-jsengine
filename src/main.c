@@ -159,10 +159,10 @@ int main(int argc, char *argv[])
 
 	__pacrunner_proxy_init();
 	__pacrunner_download_init();
+	__pacrunner_js_init();
 	__pacrunner_manager_init(conn);
 	__pacrunner_client_init(conn);
 	__pacrunner_manual_init();
-	__pacrunner_mozjs_init();
 	__pacrunner_plugin_init();
 
 	memset(&sa, 0, sizeof(sa));
@@ -173,10 +173,10 @@ int main(int argc, char *argv[])
 	g_main_loop_run(main_loop);
 
 	__pacrunner_plugin_cleanup();
-	__pacrunner_mozjs_cleanup();
 	__pacrunner_manual_cleanup();
 	__pacrunner_client_cleanup();
 	__pacrunner_manager_cleanup();
+	__pacrunner_js_cleanup();
 	__pacrunner_download_cleanup();
 	__pacrunner_proxy_cleanup();
 

@@ -56,6 +56,16 @@ AC_ARG_ENABLE(pie, AC_HELP_STRING([--enable-pie],
 	fi
 ])
 
+AC_ARG_ENABLE(mozjs, AC_HELP_STRING([--enable-mozjs],
+		[enable Mozilla Javascript plugin support]))
+if (test "${enable_mozjs}" = "yes"); then
+	PKG_CHECK_MODULES(MOZJS,  mozilla-js >= 1.9, enable_threads=yes,
+			AC_MSG_ERROR(Mozilla Javascript >= 1.9 is required))
+	AC_SUBST(MOZJS_CFLAGS)
+	AC_SUBST(MOZJS_LIBS)
+fi
+AM_CONDITIONAL(MOZJS, test "${enable_mozjs}" = "yes")
+
 AC_ARG_ENABLE(threads,
 	AC_HELP_STRING([--enable-threads], [enable threading support]),
 			[enable_threads=${enableval}], [enable_threads="no"])
@@ -102,11 +112,6 @@ if (test "${enable_capng}" = "yes"); then
 	AC_SUBST(CAPNG_LIBS)
 	AC_DEFINE(HAVE_CAPNG, 1, [Define to 1 if you have capabilities library.])
 fi
-
-PKG_CHECK_MODULES(MOZJS, mozilla-js >= 1.9, enable_threads=yes,
-			AC_MSG_ERROR(Mozilla Javascript >= 1.9 is required))
-AC_SUBST(MOZJS_CFLAGS)
-AC_SUBST(MOZJS_LIBS)
 
 if (test "${enable_threads}" = "yes"); then
 	AC_DEFINE(NEED_THREADS, 1, [Define if threading support is required])
