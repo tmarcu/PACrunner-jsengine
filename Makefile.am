@@ -111,7 +111,7 @@ EXTRA_DIST = src/genbuiltin src/pacrunner.conf $(test_scripts) \
 				doc/manager-api.txt doc/client-api.txt
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-libproxy --disable-datafiles \
-				--enable-mozjs
+				--enable-mozjs --enable-curl
 
 MAINTAINERCLEANFILES = Makefile.in \
 	aclocal.m4 configure config.h.in config.sub config.guess \
