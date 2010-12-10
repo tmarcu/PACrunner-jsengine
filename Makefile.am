@@ -33,6 +33,12 @@ builtin_cflags += @MOZJS_CFLAGS@
 builtin_libadd += @MOZJS_LIBS@
 endif
 
+if V8
+builtin_modules += v8
+builtin_sources += plugins/v8.cc
+builtin_libadd += @V8_LIBS@
+endif
+
 sbin_PROGRAMS = src/pacrunner
 
 src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
@@ -94,6 +100,8 @@ AM_CFLAGS = @GLIB_CFLAGS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ \
 					$(builtin_cflags) \
 					-DPACRUNNER_PLUGIN_BUILTIN \
 					-DPLUGINDIR=\""$(plugindir)"\"
+
+AM_CXXFLAGS = $(AM_CFLAGS)
 
 INCLUDES = -I$(builddir)/src -I$(srcdir)/src -I$(srcdir)/gdbus
 

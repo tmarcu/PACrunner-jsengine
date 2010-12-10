@@ -23,6 +23,7 @@ COMPILER_FLAGS
 AC_LANG_C
 
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_CC_PIE
 AC_PROG_INSTALL
 
@@ -65,6 +66,15 @@ if (test "${enable_mozjs}" = "yes"); then
 	AC_SUBST(MOZJS_LIBS)
 fi
 AM_CONDITIONAL(MOZJS, test "${enable_mozjs}" = "yes")
+
+AC_ARG_ENABLE(v8, AC_HELP_STRING([--enable-v8],
+		[enable V8 Javascript plugin support]))
+if (test "${enable_v8}" = "yes"); then
+	AC_CHECK_LIB(v8, _ZN2v82V810InitializeEv,
+		[enable_threads=yes V8_LIBS="-lv8 -lpthread" AC_SUBST(V8_LIBS)],
+		[AC_MSG_ERROR(Chrome v8 is required)], -lpthread)
+fi
+AM_CONDITIONAL(V8, test "${enable_v8}" = "yes")
 
 AC_ARG_ENABLE(threads,
 	AC_HELP_STRING([--enable-threads], [enable threading support]),
