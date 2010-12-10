@@ -41,7 +41,7 @@
 
 static GStaticMutex mozjs_mutex = G_STATIC_MUTEX_INIT;
 
-struct pacrunner_proxy *current_proxy = NULL;
+static struct pacrunner_proxy *current_proxy = NULL;
 
 static int getaddr(const char *node, char *host, size_t hostlen)
 {

@@ -41,10 +41,10 @@ extern "C" {
 #include "js.h"
 };
 
-struct pacrunner_proxy *current_proxy = NULL;
-v8::Persistent<v8::Context> jsctx;
-v8::Persistent<v8::Function> jsfn;
-guint gc_source = 0;
+static struct pacrunner_proxy *current_proxy = NULL;
+static v8::Persistent<v8::Context> jsctx;
+static v8::Persistent<v8::Function> jsfn;
+static guint gc_source = 0;
 
 static gboolean v8_gc(gpointer user_data)
 {
@@ -218,7 +218,7 @@ static void destroy_object(void)
 	}
 }
 
-int v8_set_proxy(struct pacrunner_proxy *proxy)
+static int v8_set_proxy(struct pacrunner_proxy *proxy)
 {
 	v8::Locker lck;
 
@@ -239,7 +239,7 @@ int v8_set_proxy(struct pacrunner_proxy *proxy)
 }
 
 
-char *v8_execute(const char *url, const char *host)
+static char *v8_execute(const char *url, const char *host)
 {
 	v8::Locker lck;
 
