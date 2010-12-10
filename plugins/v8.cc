@@ -274,7 +274,6 @@ static char *v8_execute(const char *url, const char *host)
 		return NULL;
 	}
 
-	/* Hrm, how to fix this leak? */
 	char *retval = g_strdup(*v8::String::Utf8Value(result->ToString()));
 
 	if (!gc_source)
