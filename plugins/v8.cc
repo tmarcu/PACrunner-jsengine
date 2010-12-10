@@ -285,7 +285,7 @@ char *v8_execute(const char *url, const char *host)
 
 static struct pacrunner_js_driver v8_driver = {
 	"v8",
-	0,
+	PACRUNNER_JS_PRIORITY_HIGH,
 	v8_set_proxy,
 	v8_execute,
 };

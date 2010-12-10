@@ -19,6 +19,10 @@
  *
  */
 
+#define PACRUNNER_JS_PRIORITY_LOW      -100
+#define PACRUNNER_JS_PRIORITY_DEFAULT     0
+#define PACRUNNER_JS_PRIORITY_HIGH      100
+
 struct pacrunner_js_driver {
 	const char *name;
 	int priority;

@@ -258,6 +258,7 @@ static char * mozjs_execute(const char *url, const char *host)
 
 static struct pacrunner_js_driver mozjs_driver = {
 	.name		= "mozjs",
+	.priority	= PACRUNNER_JS_PRIORITY_DEFAULT,
 	.set_proxy	= mozjs_set_proxy,
 	.execute	= mozjs_execute,
 };
