@@ -33,7 +33,7 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/log.h src/log.c src/plugin.h src/plugin.c \
 			src/download.h src/download.c \
 			src/client.c src/manager.c src/proxy.c \
-			src/manual.c src/mozjs.c src/javascript.h
+			src/manual.c src/mozjs.c src/js.h src/js.c src/javascript.h
 
 src_pacrunner_LDADD = $(builtin_libadd) @MOZJS_LIBS@ \
 				@GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@ -ldl
