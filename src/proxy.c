@@ -41,7 +41,8 @@ struct pacrunner_proxy {
 static GList *proxy_list = NULL;
 static GMutex *proxy_mutex = NULL;
 static GCond *proxy_cond = NULL;
-static gint proxy_updating = 0;
+static int timeout_source = 0;
+static gint proxy_updating = -1; /* -1 for 'never set', with timeout */
 
 struct pacrunner_proxy *pacrunner_proxy_create(const char *interface)
 {
@@ -245,10 +246,17 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy,
 						download_callback, proxy);
 	if (err < 0) {
 		pacrunner_proxy_unref(proxy);
+		if (proxy_updating == -1) {
+			proxy_updating = 0;
+			g_cond_broadcast(proxy_cond);
+		}
 		g_mutex_unlock(proxy_mutex);
 		return err;
 	}
-	proxy_updating++;
+	if (proxy_updating == -1)
+		proxy_updating = 1;
+	else
+		proxy_updating++;
 	g_mutex_unlock(proxy_mutex);
 
 	return 0;
@@ -274,6 +282,10 @@ int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
 	__pacrunner_js_set_proxy(proxy);
 
 	g_mutex_lock(proxy_mutex);
+	if (proxy_updating == -1) {
+		proxy_updating = 0;
+		g_cond_broadcast(proxy_cond);
+	}
 	proxy_list = g_list_append(proxy_list, proxy);
 	g_mutex_unlock(proxy_mutex);
 
@@ -351,12 +363,27 @@ char *pacrunner_proxy_lookup(const char *url, const char *host)
 	return NULL;
 }
 
+static gboolean proxy_config_timeout(gpointer user_data)
+{
+	DBG("");
+
+	/* If ConnMan/NetworkManager/whatever hasn't given us a config within
+	   a reasonable length of time, start responding 'DIRECT'. */
+	if (proxy_updating == -1) {
+		proxy_updating = 0;
+		g_cond_broadcast(proxy_cond);
+	}
+	return FALSE;
+}
+
 int __pacrunner_proxy_init(void)
 {
 	DBG("");
 
 	proxy_mutex = g_mutex_new();
 	proxy_cond = g_cond_new();
+
+	timeout_source = g_timeout_add_seconds(5, proxy_config_timeout, NULL);
 
 	return 0;
 }
@@ -384,4 +411,9 @@ void __pacrunner_proxy_cleanup(void)
 
 	g_list_free(proxy_list);
 	proxy_list = NULL;
+
+	if (timeout_source) {
+		g_source_remove(timeout_source);
+		timeout_source = 0;
+	}
 }
