@@ -38,6 +38,11 @@ struct pacrunner_proxy {
 	char **excludes;
 };
 
+static GList *proxy_list = NULL;
+static GMutex *proxy_mutex = NULL;
+static GCond *proxy_cond = NULL;
+static gint proxy_updating = 0;
+
 struct pacrunner_proxy *pacrunner_proxy_create(const char *interface)
 {
 	struct pacrunner_proxy *proxy;
@@ -196,6 +201,10 @@ static void download_callback(char *content, void *user_data)
 	pacrunner_proxy_enable(proxy);
 
 done:
+	g_mutex_lock(proxy_mutex);
+	proxy_updating--;
+	g_cond_broadcast(proxy_cond);
+	g_mutex_unlock(proxy_mutex);
 	pacrunner_proxy_unref(proxy);
 }
 
@@ -231,18 +240,19 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy,
 
 	pacrunner_proxy_ref(proxy);
 
+	g_mutex_lock(proxy_mutex);
 	err = __pacrunner_download_update(proxy->interface, proxy->url,
 						download_callback, proxy);
 	if (err < 0) {
 		pacrunner_proxy_unref(proxy);
+		g_mutex_unlock(proxy_mutex);
 		return err;
 	}
+	proxy_updating++;
+	g_mutex_unlock(proxy_mutex);
 
 	return 0;
 }
-
-static GList *proxy_list = NULL;
-static GMutex *proxy_mutex = NULL;
 
 int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
 {
@@ -301,10 +311,14 @@ char *pacrunner_proxy_lookup(const char *url, const char *host)
 
 	DBG("url %s host %s", url, host);
 
-	if (proxy_list == NULL)
-		return NULL;
-
 	g_mutex_lock(proxy_mutex);
+	while (proxy_updating)
+		g_cond_wait(proxy_cond, proxy_mutex);
+
+	if (proxy_list == NULL) {
+		g_mutex_unlock(proxy_mutex);
+		return NULL;
+	}
 
 	for (list = g_list_first(proxy_list); list; list = g_list_next(list)) {
 		struct pacrunner_proxy *proxy = list->data;
@@ -342,6 +356,7 @@ int __pacrunner_proxy_init(void)
 	DBG("");
 
 	proxy_mutex = g_mutex_new();
+	proxy_cond = g_cond_new();
 
 	return 0;
 }
@@ -363,6 +378,9 @@ void __pacrunner_proxy_cleanup(void)
 
 	g_mutex_free(proxy_mutex);
 	proxy_mutex = NULL;
+
+	g_cond_free(proxy_cond);
+	proxy_cond = NULL;
 
 	g_list_free(proxy_list);
 	proxy_list = NULL;
