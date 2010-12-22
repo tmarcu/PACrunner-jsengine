@@ -41,7 +41,7 @@ void __pacrunner_log_cleanup(void);
 
 #include "plugin.h"
 
-int __pacrunner_plugin_init(void);
+int __pacrunner_plugin_init(const char *pattern, const char *exclude);
 void __pacrunner_plugin_cleanup(void);
 
 

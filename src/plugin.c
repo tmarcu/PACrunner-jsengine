@@ -64,10 +64,38 @@ static gboolean add_plugin(void *handle, struct pacrunner_plugin_desc *desc)
 	return TRUE;
 }
 
+static gboolean check_plugin(struct pacrunner_plugin_desc *desc,
+				char **patterns, char **excludes)
+{
+	if (excludes) {
+		for (; *excludes; excludes++)
+			if (g_pattern_match_simple(*excludes, desc->name))
+				break;
+		if (*excludes) {
+			pacrunner_info("Excluding %s", desc->name);
+			return FALSE;
+		}
+	}
+
+	if (patterns) {
+		for (; *patterns; patterns++)
+			if (g_pattern_match_simple(*patterns, desc->name))
+				break;
+		if (!*patterns) {
+			pacrunner_info("Ignoring %s", desc->name);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
 #include "builtin.h"
 
-int __pacrunner_plugin_init(void)
+int __pacrunner_plugin_init(const char *pattern, const char *exclude)
 {
+	gchar **patterns = NULL;
+	gchar **excludes = NULL;
 	GDir *dir;
 	const char *file;
 	unsigned int i;
@@ -77,8 +105,19 @@ int __pacrunner_plugin_init(void)
 
 	DBG("");
 
-	for (i = 0; __pacrunner_builtin[i]; i++)
+	if (pattern)
+		patterns = g_strsplit_set(pattern, ", ", -1);
+
+	if (exclude)
+		excludes = g_strsplit_set(exclude, ", ", -1);
+
+	for (i = 0; __pacrunner_builtin[i]; i++) {
+		if (check_plugin(__pacrunner_builtin[i],
+						patterns, excludes) == FALSE)
+			continue;
+
 		add_plugin(NULL, __pacrunner_builtin[i]);
+	}
 
 	dir = g_dir_open(PLUGINDIR, 0, NULL);
 	if (dir == NULL)
@@ -113,11 +152,19 @@ int __pacrunner_plugin_init(void)
 			continue;
 		}
 
+		if (check_plugin(desc, patterns, excludes) == FALSE) {
+			dlclose(handle);
+			continue;
+		}
+
 		if (add_plugin(handle, desc) == FALSE)
 				dlclose(handle);
 	}
 
 	g_dir_close(dir);
+
+	g_strfreev(patterns);
+	g_strfreev(excludes);
 
 	return 0;
 }

@@ -61,6 +61,8 @@ static void disconnect_callback(DBusConnection *conn, void *user_data)
 }
 
 static gchar *option_debug = NULL;
+static gchar *option_plugin = NULL;
+static gchar *option_noplugin = NULL;
 static gboolean option_detach = TRUE;
 static gboolean option_version = FALSE;
 
@@ -82,6 +84,10 @@ static GOptionEntry options[] = {
 	{ "nodaemon", 'n', G_OPTION_FLAG_REVERSE,
 				G_OPTION_ARG_NONE, &option_detach,
 				"Don't fork daemon to background" },
+	{ "plugin", 'p', 0, G_OPTION_ARG_STRING, &option_plugin,
+				"Specify plugins to load", "NAME,..." },
+	{ "noplugin", 'P', 0, G_OPTION_ARG_STRING, &option_noplugin,
+				"Specify plugins not to load", "NAME,..." },
 	{ "version", 'v', 0, G_OPTION_ARG_NONE, &option_version,
 				"Show version information and exit" },
 	{ NULL },
@@ -163,7 +169,10 @@ int main(int argc, char *argv[])
 	__pacrunner_manager_init(conn);
 	__pacrunner_client_init(conn);
 	__pacrunner_manual_init();
-	__pacrunner_plugin_init();
+	__pacrunner_plugin_init(option_plugin, option_noplugin);
+
+	g_free(option_plugin);
+	g_free(option_noplugin);
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = sig_term;
