@@ -154,6 +154,13 @@ int pacrunner_proxy_set_direct(struct pacrunner_proxy *proxy)
 	if (proxy == NULL)
 		return -EINVAL;
 
+	g_mutex_lock(proxy_mutex);
+	if (proxy_updating == -1) {
+		proxy_updating = 0;
+		g_cond_broadcast(proxy_cond);
+	}
+	g_mutex_unlock(proxy_mutex);
+
 	return set_method(proxy, PACRUNNER_PROXY_METHOD_DIRECT);
 }
 
