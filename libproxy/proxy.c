@@ -2,7 +2,7 @@
  *
  *  libproxy - A library for proxy configuration
  *
- *  Copyright (C) 2010  Intel Corporation. All rights reserved.
+ *  Copyright (C) 2010-2011  Intel Corporation. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or modify
  *  it under the terms and conditions of the GNU Lesser General Public
