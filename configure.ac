@@ -60,7 +60,7 @@ AC_ARG_ENABLE(pie, AC_HELP_STRING([--enable-pie],
 AC_ARG_ENABLE(mozjs, AC_HELP_STRING([--enable-mozjs],
 		[enable Mozilla Javascript plugin support]))
 if (test "${enable_mozjs}" = "yes"); then
-	PKG_CHECK_MODULES(MOZJS,  mozilla-js >= 1.9, enable_threads=yes,
+	PKG_CHECK_MODULES(MOZJS,  mozilla-js >= 1.9, dummy=yes,
 			AC_MSG_ERROR(Mozilla Javascript >= 1.9 is required))
 	AC_SUBST(MOZJS_CFLAGS)
 	AC_SUBST(MOZJS_LIBS)
@@ -71,14 +71,10 @@ AC_ARG_ENABLE(v8, AC_HELP_STRING([--enable-v8],
 		[enable V8 Javascript plugin support]))
 if (test "${enable_v8}" = "yes"); then
 	AC_CHECK_LIB(v8, _ZN2v82V810InitializeEv,
-		[enable_threads=yes V8_LIBS="-lv8 -lpthread" AC_SUBST(V8_LIBS)],
+		[V8_LIBS="-lv8 -lpthread" AC_SUBST(V8_LIBS)],
 		[AC_MSG_ERROR(Chrome v8 is required)], -lpthread)
 fi
 AM_CONDITIONAL(V8, test "${enable_v8}" = "yes")
-
-AC_ARG_ENABLE(threads,
-	AC_HELP_STRING([--enable-threads], [enable threading support]),
-			[enable_threads=${enableval}], [enable_threads="no"])
 
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, dummy=yes,
 				AC_MSG_ERROR(GLib >= 2.16 is required))
@@ -123,13 +119,10 @@ if (test "${enable_capng}" = "yes"); then
 	AC_DEFINE(HAVE_CAPNG, 1, [Define to 1 if you have capabilities library.])
 fi
 
-if (test "${enable_threads}" = "yes"); then
-	AC_DEFINE(NEED_THREADS, 1, [Define if threading support is required])
-	PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.16, dummy=yes,
-				AC_MSG_ERROR(GThread >= 2.16 is required))
-	GLIB_CFLAGS="$GLIB_CFLAGS $GTHREAD_CFLAGS"
-	GLIB_LIBS="$GLIB_LIBS $GTHREAD_LIBS"
-fi
+PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.16, dummy=yes,
+			AC_MSG_ERROR(GThread >= 2.16 is required))
+AC_SUBST(GTHREAD_CFLAGS)
+AC_SUBST(GTHREAD_LIBS)
 
 AC_ARG_ENABLE(curl, AC_HELP_STRING([--enable-curl],
 		[enable CURL plugin support]), [enable_capng=${enableval}])

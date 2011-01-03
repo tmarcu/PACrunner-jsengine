@@ -48,8 +48,8 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/client.c src/manager.c src/proxy.c \
 			src/manual.c src/js.h src/js.c src/javascript.h
 
-src_pacrunner_LDADD = $(builtin_libadd) \
-				@GLIB_LIBS@ @DBUS_LIBS@ @CAPNG_LIBS@ -ldl
+src_pacrunner_LDADD = $(builtin_libadd) @GLIB_LIBS@ @GTHREAD_LIBS@ \
+				@DBUS_LIBS@ @CAPNG_LIBS@ -ldl
 
 src_pacrunner_LDFLAGS = -Wl,--export-dynamic
 
@@ -93,10 +93,10 @@ unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
 			src/proxy.c src/manual.c src/download.c \
 				src/js.c plugins/mozjs.c
 
-unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@
+unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@ @GTHREAD_LIBS@
 endif
 
-AM_CFLAGS = @GLIB_CFLAGS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ \
+AM_CFLAGS = @GLIB_CFLAGS@ @GTHREAD_LIBS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ \
 					$(builtin_cflags) \
 					-DPACRUNNER_PLUGIN_BUILTIN \
 					-DPLUGINDIR=\""$(plugindir)"\"
