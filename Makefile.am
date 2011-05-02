@@ -71,7 +71,7 @@ libproxy_libproxy_la_SOURCES = libproxy/proxy.h libproxy/proxy.c
 
 libproxy_libproxy_la_LIBADD = @DBUS_LIBS@
 
-libproxy_libproxy_la_LDFLAGS = -version-info 0:0:0
+libproxy_libproxy_la_LDFLAGS = -version-info 1:0:0
 
 if DATAFILES
 pkgconfigdir = $(libdir)/pkgconfig
