@@ -162,7 +162,11 @@ static void create_object(void)
 
 	jsctx = JS_NewContext(jsrun, 8 * 1024);
 
+#if JS_VERSION >= 185
+	jsobj = JS_NewCompartmentAndGlobalObject(jsctx, &jscls, NULL);
+#else
 	jsobj = JS_NewObject(jsctx, &jscls, NULL, NULL);
+#endif
 
 	if (!JS_InitStandardClasses(jsctx, jsobj))
 		pacrunner_error("Failed to init JS standard classes");
