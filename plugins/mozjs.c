@@ -119,19 +119,21 @@ static JSBool dnsresolve(JSContext *ctx, JSObject *obj, uintN argc,
 						jsval *argv, jsval *rval)
 {
 	char address[NI_MAXHOST];
-	char *host = JS_GetStringBytes(JS_ValueToString(ctx, argv[0]));
+	char *host = JS_EncodeString(ctx, JS_ValueToString(ctx, argv[0]));
 
 	DBG("host %s", host);
 
 	*rval = JSVAL_NULL;
 
 	if (resolve(host, address, sizeof(address)) < 0)
-		return JS_TRUE;
+		goto out;
 
 	DBG("address %s", address);
 
 	*rval = STRING_TO_JSVAL(JS_NewStringCopyZ(ctx, address));
 
+ out:
+	JS_free(ctx, host);
 	return JS_TRUE;
 }
 
@@ -205,7 +207,7 @@ static char * mozjs_execute(const char *url, const char *host)
 {
 	JSBool result;
 	jsval rval, args[2];
-	char *answer;
+	char *answer, *g_answer;
 
 	DBG("url %s host %s", url, host);
 
@@ -229,8 +231,10 @@ static char * mozjs_execute(const char *url, const char *host)
 	g_static_mutex_unlock(&mozjs_mutex);
 
 	if (result) {
-		answer = JS_GetStringBytes(JS_ValueToString(jsctx, rval));
-		return g_strdup(answer);
+		answer = JS_EncodeString(jsctx, JS_ValueToString(jsctx, rval));
+		g_answer = g_strdup(answer);
+		JS_free(jsctx, answer);
+		return g_answer;
 	}
 
 	return NULL;
