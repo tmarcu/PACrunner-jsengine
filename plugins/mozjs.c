@@ -93,7 +93,6 @@ static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 {
 	const char *interface;
 	char address[NI_MAXHOST];
-	char *result;
 
 	DBG("");
 
@@ -111,11 +110,7 @@ static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
 
 	DBG("address %s", address);
 
-	result = JS_strdup(ctx, address);
-	if (result == NULL)
-		return JS_TRUE;
-
-	*rval = STRING_TO_JSVAL(JS_NewString(ctx, result, strlen(result)));
+	*rval = STRING_TO_JSVAL(JS_NewStringCopyZ(ctx, address));
 
 	return JS_TRUE;
 }
@@ -125,7 +120,6 @@ static JSBool dnsresolve(JSContext *ctx, JSObject *obj, uintN argc,
 {
 	char address[NI_MAXHOST];
 	char *host = JS_GetStringBytes(JS_ValueToString(ctx, argv[0]));
-	char *result;
 
 	DBG("host %s", host);
 
@@ -136,11 +130,7 @@ static JSBool dnsresolve(JSContext *ctx, JSObject *obj, uintN argc,
 
 	DBG("address %s", address);
 
-	result = JS_strdup(ctx, address);
-	if (result == NULL)
-		return JS_TRUE;
-
-	*rval = STRING_TO_JSVAL(JS_NewString(ctx, result, strlen(result)));
+	*rval = STRING_TO_JSVAL(JS_NewStringCopyZ(ctx, address));
 
 	return JS_TRUE;
 }
@@ -215,29 +205,19 @@ static char * mozjs_execute(const char *url, const char *host)
 {
 	JSBool result;
 	jsval rval, args[2];
-	char *answer, *tmpurl, *tmphost;
+	char *answer;
 
 	DBG("url %s host %s", url, host);
 
 	if (jsctx == NULL)
 		return NULL;
 
-	tmpurl = JS_strdup(jsctx, url);
-	tmphost = JS_strdup(jsctx, host);
-
-	if (tmpurl == NULL || tmphost == NULL) {
-		JS_free(jsctx, tmphost);
-		JS_free(jsctx, tmpurl);
-		return NULL;
-	}
 	g_static_mutex_lock(&mozjs_mutex);
 
 	JS_BeginRequest(jsctx);
 
-	args[0] = STRING_TO_JSVAL(JS_NewString(jsctx,
-					tmpurl, strlen(tmpurl)));
-	args[1] = STRING_TO_JSVAL(JS_NewString(jsctx,
-					tmphost, strlen(tmphost)));
+	args[0] = STRING_TO_JSVAL(JS_NewStringCopyZ(jsctx, url));
+	args[1] = STRING_TO_JSVAL(JS_NewStringCopyZ(jsctx, host));
 
 	result = JS_CallFunctionName(jsctx, jsobj, "FindProxyForURL",
 							2, args, &rval);
