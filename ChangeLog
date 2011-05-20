@@ -1,3 +1,8 @@
+ver 0.3:
+	Fix issue with wrong libproxy soname.
+	Fix issue with usage of JS_GetStringBytes.
+	Fix issue with usage of JS_NewCompartmentAndGlobalObject.
+
 ver 0.2:
 	Fix issue with use-after-free in CURL plugin.
 	Fix issue with recurring timeouts from CURL.
