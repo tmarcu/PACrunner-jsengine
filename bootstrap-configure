@@ -12,5 +12,5 @@ fi
 		--disable-datafiles \
 		--enable-libproxy \
 		--enable-curl \
-		--enable-v8 \
+		--enable-mozjs \
 		--enable-capng $*
