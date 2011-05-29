@@ -133,7 +133,7 @@ char **px_proxy_factory_get_proxies(pxProxyFactory *factory, const char *url)
 	port = strrchr(host, ':');
 	if (port != NULL) {
 		char *end;
-		int tmp;
+		int tmp __attribute__ ((unused));
 
 		tmp = strtol(port + 1, &end, 10);
 		if (*end == '\0')
