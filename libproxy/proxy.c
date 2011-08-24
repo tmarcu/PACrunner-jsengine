@@ -77,12 +77,12 @@ static char **extract_result(const char *str)
 	result[0] = NULL;
 	result[1] = NULL;
 
-	if (strcmp(str, "DIRECT") == 0) {
+	if (strcasecmp(str, "DIRECT") == 0) {
 		result[0] = strdup("direct://");
 		return result;
 	}
 
-	if (strncmp(str, "PROXY ", 6) == 0) {
+	if (strncasecmp(str, "PROXY ", 6) == 0) {
 		int len = strlen(str + 6) + 8;
 		result[0] = malloc(len);
 		if (result[0] != NULL)
