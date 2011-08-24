@@ -90,6 +90,30 @@ static char **extract_result(const char *str)
 		return result;
 	}
 
+	if (strncasecmp(str, "SOCKS ", 6) == 0) {
+		int len = strlen(str + 6) + 9;
+		result[0] = malloc(len);
+		if (result[0] != NULL)
+			sprintf(result[0], "socks://%s", str + 6);
+		return result;
+	}
+
+	if (strncasecmp(str, "SOCKS4 ", 7) == 0) {
+		int len = strlen(str + 7) + 10;
+		result[0] = malloc(len);
+		if (result[0] != NULL)
+			sprintf(result[0], "socks4://%s", str + 7);
+		return result;
+	}
+
+	if (strncasecmp(str, "SOCKS5 ", 7) == 0) {
+		int len = strlen(str + 7) + 10;
+		result[0] = malloc(len);
+		if (result[0] != NULL)
+			sprintf(result[0], "socks5://%s", str + 7);
+		return result;
+	}
+
 	return result;
 }
 
