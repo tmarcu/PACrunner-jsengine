@@ -62,10 +62,17 @@ AC_ARG_ENABLE(mozjs, AC_HELP_STRING([--enable-mozjs],
 if (test "${enable_mozjs}" = "yes"); then
 	PKG_CHECK_MODULES(MOZJS,  mozilla-js >= 1.9, dummy=yes,
 			AC_MSG_ERROR(Mozilla Javascript >= 1.9 is required))
+
+	mozjs_version=`pkg-config --modversion mozilla-js | cut -d '.' -f 1`
+	if test ${mozjs_version} -gt 1; then
+		MOZJS_CFLAGS="${MOZJS_CFLAGS} -DMOZJS_VERSION_2_OR_SUPERIOR=1"
+	fi
+
 	AC_SUBST(MOZJS_CFLAGS)
 	AC_SUBST(MOZJS_LIBS)
 fi
 AM_CONDITIONAL(MOZJS, test "${enable_mozjs}" = "yes")
+
 
 AC_ARG_ENABLE(v8, AC_HELP_STRING([--enable-v8],
 		[enable V8 Javascript plugin support]))
