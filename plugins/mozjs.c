@@ -32,7 +32,9 @@
 #include <arpa/inet.h>
 #include <linux/if_arp.h>
 
+#pragma GCC diagnostic ignored "-Wredundant-decls"
 #include <jsapi.h>
+#pragma GCC diagnostic error "-Wredundant-decls"
 
 #include "javascript.h"
 
