@@ -299,6 +299,10 @@ static int curl_download(const char *interface, const char *url,
 	curl_easy_setopt(download->easy, CURLOPT_USERAGENT, "pacrunner");
 
 	result = curl_multi_add_handle(multi, download->easy);
+	if (result != 0) {
+		pacrunner_error("curl error %s", curl_multi_strerror(result));
+		return -1;
+	}
 
 	return 0;
 }
