@@ -1,3 +1,8 @@
+ver 0.4:
+	Fix issue with case sensitive strings for PAC files.
+	Add support for SOCKS proxies.
+	Add support for newer XUL Runtime.
+
 ver 0.3:
 	Fix issue with wrong libproxy soname.
 	Fix issue with usage of JS_GetStringBytes.
