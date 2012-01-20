@@ -1,0 +1,27 @@
+[title]
+# Here should come a one line definition of the test suite
+Stub suite file
+
+[pac]
+# Either a pac code is entered here...
+
+[servers]
+# ... or manual proxy servers are here
+
+[excludes]
+# If so, optional exlusion rules can be written here
+
+[config]
+# Result of the configuration: VALID or INVALID
+
+[tests]
+# Pairs of lines: the input (url and host), and the output
+# output is the one given by pacrunner_proxy_lookup()
+# If this output must be NULL, you will have to write DIRECT.
+# For instance:
+# http://test.com test.com
+# DIRECT
+
+# In case of a PAC file, returning a proxy result it should be:
+# http://test.com test.com
+# PROXY thetestproxy.com
