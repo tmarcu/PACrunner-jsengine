@@ -439,12 +439,36 @@ void __pacrunner_manual_destroy_excludes(GList **excludes)
 char *__pacrunner_manual_execute(const char *url, const char *host,
 				 GList **servers, GList **excludes)
 {
+	char *protocol = NULL;
+	char *result = NULL;
+	char *host_p = NULL;
+	int proto;
+
 	DBG("url %s host %s", url, host);
 
-	if (servers == NULL || servers[0] == NULL)
+	if (servers == NULL || (url == NULL && host == NULL))
 		return NULL;
 
-	return g_strdup_printf("PROXY %s", (char *)servers[0]->data);
+	if (url == NULL)
+		url = host;
+
+	if (parse_uri((char *)url, &host_p, &protocol, FALSE, FALSE) < 0)
+		goto direct;
+
+	proto = get_protocol_from_string(protocol);
+
+	if (servers[PACRUNNER_PROTOCOL_ALL] != NULL)
+		result = (char *)servers[PACRUNNER_PROTOCOL_ALL]->data;
+	else if (proto >= PACRUNNER_PROTOCOL_HTTP &&
+				proto < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER)
+		if (servers[proto] != NULL)
+			result = (char *)servers[proto]->data;
+
+direct:
+	g_free(protocol);
+	g_free(host_p);
+
+	return g_strdup(result);
 }
 
 int __pacrunner_manual_init(void)
