@@ -86,8 +86,10 @@ static void reset_proxy(struct pacrunner_proxy *proxy)
 	g_free(proxy->script);
 	proxy->script = NULL;
 
+	__pacrunner_manual_destroy_servers(proxy->servers);
 	proxy->servers = NULL;
 
+	__pacrunner_manual_destroy_excludes(proxy->excludes);
 	proxy->excludes = NULL;
 }
 
@@ -178,6 +180,12 @@ int pacrunner_proxy_set_manual(struct pacrunner_proxy *proxy,
 	err = set_method(proxy, PACRUNNER_PROXY_METHOD_MANUAL);
 	if (err < 0)
 		return err;
+
+	proxy->servers = __pacrunner_manual_parse_servers(servers);
+	if (proxy->servers == NULL)
+		return -EINVAL;
+
+	proxy->excludes = __pacrunner_manual_parse_excludes(excludes);
 
 	pacrunner_proxy_enable(proxy);
 
