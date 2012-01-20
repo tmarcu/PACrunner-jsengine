@@ -90,11 +90,25 @@ if UNIT
 
 noinst_PROGRAMS = unit/test-pacrunner
 
-unit_test_pacrunner_SOURCES = unit/test-pacrunner.c
+unit_test_pacrunner_SOURCES = unit/test-pacrunner.c src/pacrunner.h \
+			src/proxy.c src/manual.c src/download.c \
+			src/js.c src/log.c src/plugin.c
 
 unit_test_pacrunner_LDADD = @GLIB_LIBS@
 
+if CURL
+
+unit_test_pacrunner_SOURCES += plugins/curl.c
+
+unit_test_pacrunner_LDADD += @CURL_LIBS@
+
+endif
+
 if MOZJS
+unit_test_pacrunner_SOURCES += plugins/mozjs.c
+
+unit_test_pacrunner_LDADD += @MOZJS_LIBS@
+
 noinst_PROGRAMS += unit/test-mozjs
 
 unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
@@ -102,6 +116,14 @@ unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
 				src/js.c plugins/mozjs.c
 
 unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@ @GTHREAD_LIBS@
+endif
+
+if V8
+
+unit_test_pacrunner_SOURCES += plugins/v8.cc
+
+unit_test_pacrunner_LDADD += @V8_LIBS@
+
 endif
 
 endif #UNIT

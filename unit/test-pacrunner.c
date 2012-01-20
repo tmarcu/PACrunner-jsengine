@@ -35,6 +35,8 @@
 #include <string.h>
 #include <getopt.h>
 
+#include "pacrunner.h"
+
 enum test_suite_part {
 	SUITE_TITLE    = 0,
 	SUITE_PAC      = 1,
@@ -63,6 +65,9 @@ struct pacrunner_test_suite {
 
 static struct pacrunner_test_suite *test_suite;
 static gboolean verbose = FALSE;
+
+static struct pacrunner_proxy *proxy;
+static gboolean test_config;
 
 static void free_pacrunner_test_suite(struct pacrunner_test_suite *suite)
 {
@@ -295,27 +300,100 @@ error:
 
 static int test_suite_init(void)
 {
+	proxy = pacrunner_proxy_create("eth0");
+	if (proxy == NULL)
+		return -1;
+
 	return 0;
 }
 
 static int test_suite_cleanup(void)
 {
+	if (test_config == TRUE) {
+		if (pacrunner_proxy_disable(proxy) != 0)
+			return -1;
+	}
+
+	pacrunner_proxy_unref(proxy);
+
 	return 0;
 }
 
 static void test_pac_config(void)
 {
+	if (pacrunner_proxy_set_auto(proxy, NULL, test_suite->pac) == 0)
+		test_config = TRUE;
 
+	CU_ASSERT_TRUE(test_suite->config_result == test_config);
 }
 
 static void test_manual_config(void)
 {
+	if (pacrunner_proxy_set_manual(proxy, test_suite->servers,
+						test_suite->excludes) == 0)
+		test_config = TRUE;
 
+	CU_ASSERT_TRUE(test_suite->config_result == test_config);
 }
 
 static void test_proxy_requests(void)
 {
+	gchar **test_strings;
+	gboolean verify;
+	gchar *result;
+	gchar **test;
+	gchar *msg;
 
+	if (test_config == FALSE)
+		return;
+
+	if (verbose == TRUE)
+		printf("\n");
+
+	for (test = test_suite->tests; *test != NULL; test = test + 2) {
+		gchar *test_result = *(test+1);
+
+		test_strings = g_strsplit(*test, " ", 2);
+		if (test_strings == NULL || g_strv_length(test_strings) != 2) {
+			g_strfreev(test_strings);
+			continue;
+		}
+
+		result = pacrunner_proxy_lookup(test_strings[0],
+						test_strings[1]);
+		g_strfreev(test_strings);
+
+		verify = FALSE;
+
+		if (strncmp(test_result, "DIRECT", 6) == 0) {
+			if (result == NULL ||
+					strncmp(result, "DIRECT", 6) == 0)
+				verify = TRUE;
+		} else {
+			if (g_strcmp0(result, test_result) == 0)
+				verify = TRUE;
+		}
+
+		if (verbose == TRUE) {
+			if (verify == TRUE)
+				msg = g_strdup_printf(
+						"\tTEST: %s -> %s verified",
+							*test, test_result);
+			else
+				msg = g_strdup_printf(
+					"\tTEST: %s -> %s FAILED (%s)",
+					*test, test_result,
+					result == NULL ? "DIRECT" : result);
+
+			printf("%s\n", msg);
+			g_free(msg);
+		}
+
+		if (result != NULL)
+			g_free(result);
+
+		CU_ASSERT_TRUE(verify);
+	}
 }
 
 static void run_test_suite(const char *test_file_path, enum cu_test_mode mode)
@@ -353,6 +431,8 @@ static void run_test_suite(const char *test_file_path, enum cu_test_mode mode)
 	if (test_suite->config_result == TRUE && test_suite->tests != NULL)
 		CU_add_test(cu_suite, "Proxy requests test",
 						test_proxy_requests);
+
+	test_config = FALSE;
 
 	switch (mode) {
 	case CU_MODE_BASIC:
@@ -538,7 +618,20 @@ int main(int argc, char *argv[])
 	if (file_path != NULL)
 		test_path = g_get_current_dir();
 
+	if (g_thread_supported() == FALSE)
+		g_thread_init(NULL);
+
+	__pacrunner_proxy_init();
+	__pacrunner_js_init();
+	__pacrunner_manual_init();
+	__pacrunner_plugin_init(NULL, NULL);
+
 	find_and_run_test_suite(test_dir, test_path, file_path, mode);
+
+	__pacrunner_plugin_cleanup();
+	__pacrunner_manual_cleanup();
+	__pacrunner_js_cleanup();
+	__pacrunner_proxy_cleanup();
 
 	g_free(test_path);
 
