@@ -436,6 +436,80 @@ void __pacrunner_manual_destroy_excludes(GList **excludes)
 	g_free(excludes);
 }
 
+static gboolean is_exclusion_matching(GList *excludes_list,
+					const char *host)
+{
+	struct pacrunner_manual_exclude *exclusion;
+	GList *excludes = NULL;
+	char *cursor;
+
+	for (excludes = excludes_list; excludes != NULL;
+					excludes = excludes->next) {
+		exclusion = (struct pacrunner_manual_exclude *) excludes->data;
+		if (exclusion == NULL)
+			continue;
+
+		cursor = NULL;
+
+		if (exclusion->host != NULL)
+			cursor = strstr(host, exclusion->host);
+
+		switch (exclusion->appliance) {
+		case PACRUNNER_MANUAL_EXCLUDE_POST:
+			if (cursor == NULL)
+				break;
+
+			if ((int)strlen(cursor) < exclusion->host_length)
+				break;
+
+			if (*(cursor + exclusion->host_length) == '\0')
+				return TRUE;
+
+			break;
+		case PACRUNNER_MANUAL_EXCLUDE_PRE:
+			if (cursor == host)
+				return TRUE;
+
+			break;
+		case PACRUNNER_MANUAL_EXCLUDE_ANY:
+			if (exclusion->host != NULL) {
+				if (cursor != NULL)
+					return TRUE;
+				else
+					break;
+			}
+
+			return TRUE;
+		default:
+			break;
+		}
+	}
+
+	return FALSE;
+}
+
+static gboolean is_url_excluded(GList **excludes,
+				const char *host,
+				enum pacrunner_manual_protocol proto)
+{
+	if (excludes == NULL)
+		return FALSE;
+
+	if (excludes[PACRUNNER_PROTOCOL_ALL] != NULL)
+		if (is_exclusion_matching(excludes[PACRUNNER_PROTOCOL_ALL],
+								host) == TRUE)
+			return TRUE;
+
+	if (proto == PACRUNNER_PROTOCOL_UNKNOWN)
+		return FALSE;
+
+	if (excludes[proto] != NULL)
+		if (is_exclusion_matching(excludes[proto], host) == TRUE)
+			return TRUE;
+
+	return FALSE;
+}
+
 char *__pacrunner_manual_execute(const char *url, const char *host,
 				 GList **servers, GList **excludes)
 {
@@ -456,6 +530,9 @@ char *__pacrunner_manual_execute(const char *url, const char *host,
 		goto direct;
 
 	proto = get_protocol_from_string(protocol);
+
+	if (is_url_excluded(excludes, host_p, proto) == TRUE)
+		goto direct;
 
 	if (servers[PACRUNNER_PROTOCOL_ALL] != NULL)
 		result = (char *)servers[PACRUNNER_PROTOCOL_ALL]->data;
