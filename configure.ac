@@ -48,6 +48,10 @@ AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug],
 	fi
 ])
 
+AC_ARG_ENABLE(unit, AC_HELP_STRING([--enable-unit],
+			[enable compiling unit test binaries]))
+AM_CONDITIONAL(UNIT, test "${enable_unit}" = "yes")
+
 AC_ARG_ENABLE(pie, AC_HELP_STRING([--enable-pie],
 			[enable position independent executables flag]), [
 	if (test "${enableval}" = "yes" &&

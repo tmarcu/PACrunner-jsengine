@@ -86,8 +86,16 @@ tools_proxy_SOURCES = tools/proxy.c
 tools_proxy_LDADD = libproxy/libproxy.la
 endif
 
+if UNIT
+
+noinst_PROGRAMS = unit/test-pacrunner
+
+unit_test_pacrunner_SOURCES = unit/test-pacrunner.c
+
+unit_test_pacrunner_LDADD = @GLIB_LIBS@
+
 if MOZJS
-noinst_PROGRAMS = unit/test-mozjs
+noinst_PROGRAMS += unit/test-mozjs
 
 unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
 			src/proxy.c src/manual.c src/download.c \
@@ -95,6 +103,8 @@ unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
 
 unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@ @GTHREAD_LIBS@
 endif
+
+endif #UNIT
 
 AM_CFLAGS = @GLIB_CFLAGS@ @GTHREAD_LIBS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ \
 					$(builtin_cflags) \
