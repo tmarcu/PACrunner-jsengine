@@ -91,6 +91,10 @@ void __pacrunner_client_cleanup();
 
 int __pacrunner_manual_init(void);
 void __pacrunner_manual_cleanup(void);
+GList **__pacrunner_manual_parse_servers(char **servers);
+void __pacrunner_manual_destroy_servers(GList **servers);
+GList **__pacrunner_manual_parse_excludes(char **excludes);
+void __pacrunner_manual_destroy_excludes(GList **excludes);
 char *__pacrunner_manual_execute(const char *url, const char *host,
 				 GList **servers, GList **excludes);
 

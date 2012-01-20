@@ -25,6 +25,26 @@
 
 #include "pacrunner.h"
 
+GList **__pacrunner_manual_parse_servers(char **servers)
+{
+	return NULL;
+}
+
+void __pacrunner_manual_destroy_servers(GList **servers)
+{
+	return;
+}
+
+GList **__pacrunner_manual_parse_excludes(char **excludes)
+{
+	return NULL;
+}
+
+void __pacrunner_manual_destroy_excludes(GList **excludes)
+{
+	return;
+}
+
 char *__pacrunner_manual_execute(const char *url, const char *host,
 				 GList **servers, GList **excludes)
 {
