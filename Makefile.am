@@ -79,11 +79,14 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libproxy/libproxy-1.0.pc
 endif
 
-bin_PROGRAMS = tools/proxy
+bin_PROGRAMS = tools/proxy tools/manual-proxy-test
 
 tools_proxy_SOURCES = tools/proxy.c
 
 tools_proxy_LDADD = libproxy/libproxy.la
+
+tools_manual_proxy_test_SOURCES = tools/manual-proxy-test.c
+
 endif
 
 if UNIT
