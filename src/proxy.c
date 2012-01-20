@@ -34,8 +34,8 @@ struct pacrunner_proxy {
 	enum pacrunner_proxy_method method;
 	char *url;
 	char *script;
-	char **servers;
-	char **excludes;
+	GList **servers;
+	GList **excludes;
 };
 
 static GList *proxy_list = NULL;
@@ -86,10 +86,8 @@ static void reset_proxy(struct pacrunner_proxy *proxy)
 	g_free(proxy->script);
 	proxy->script = NULL;
 
-	g_strfreev(proxy->servers);
 	proxy->servers = NULL;
 
-	g_strfreev(proxy->excludes);
 	proxy->excludes = NULL;
 }
 
@@ -180,12 +178,6 @@ int pacrunner_proxy_set_manual(struct pacrunner_proxy *proxy,
 	err = set_method(proxy, PACRUNNER_PROXY_METHOD_MANUAL);
 	if (err < 0)
 		return err;
-
-	g_strfreev(proxy->servers);
-	proxy->servers = servers;
-
-	g_strfreev(proxy->excludes);
-	proxy->excludes = excludes;
 
 	pacrunner_proxy_enable(proxy);
 

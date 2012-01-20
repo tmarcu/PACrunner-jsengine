@@ -26,14 +26,14 @@
 #include "pacrunner.h"
 
 char *__pacrunner_manual_execute(const char *url, const char *host,
-				 char **servers, char **exludes)
+				 GList **servers, GList **excludes)
 {
 	DBG("url %s host %s", url, host);
 
 	if (servers == NULL || servers[0] == NULL)
 		return NULL;
 
-	return g_strdup_printf("PROXY %s", servers[0]);
+	return g_strdup_printf("PROXY %s", (char *)servers[0]->data);
 }
 
 int __pacrunner_manual_init(void)

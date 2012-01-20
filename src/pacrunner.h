@@ -92,7 +92,7 @@ void __pacrunner_client_cleanup();
 int __pacrunner_manual_init(void);
 void __pacrunner_manual_cleanup(void);
 char *__pacrunner_manual_execute(const char *url, const char *host,
-				 char **servers, char **exludes);
+				 GList **servers, GList **excludes);
 
 int __pacrunner_mozjs_init(void);
 void __pacrunner_mozjs_cleanup(void);
