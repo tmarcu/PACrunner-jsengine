@@ -35,6 +35,17 @@ enum pacrunner_manual_exclude_appliance {
 	PACRUNNER_MANUAL_EXCLUDE_ANY  = 2,
 };
 
+enum pacrunner_manual_protocol {
+	PACRUNNER_PROTOCOL_ALL            = 0,
+	PACRUNNER_PROTOCOL_HTTP           = 1,
+	PACRUNNER_PROTOCOL_HTTPS          = 2,
+	PACRUNNER_PROTOCOL_FTP            = 3,
+	PACRUNNER_PROTOCOL_SOCKS4         = 4,
+	PACRUNNER_PROTOCOL_SOCKS5         = 5,
+	PACRUNNER_PROTOCOL_MAXIMUM_NUMBER = 6,
+	PACRUNNER_PROTOCOL_UNKNOWN        = 7,
+};
+
 static int parse_uri(char *uri,
 			char **host,
 			char **protocol,
@@ -264,13 +275,39 @@ error:
 	return -EINVAL;
 }
 
+static enum pacrunner_manual_protocol get_protocol_from_string(const char *protocol)
+{
+	if (protocol == NULL)
+		return PACRUNNER_PROTOCOL_ALL;
+
+	if (g_strcmp0(protocol, "http") == 0)
+		return PACRUNNER_PROTOCOL_HTTP;
+	if (g_strcmp0(protocol, "https") == 0)
+		return PACRUNNER_PROTOCOL_HTTPS;
+	if (g_strcmp0(protocol, "ftp") == 0)
+		return PACRUNNER_PROTOCOL_FTP;
+	if (g_strcmp0(protocol, "socks4") == 0)
+		return PACRUNNER_PROTOCOL_SOCKS4;
+	if (g_strcmp0(protocol, "socks5") == 0)
+		return PACRUNNER_PROTOCOL_SOCKS5;
+
+	return PACRUNNER_PROTOCOL_UNKNOWN;
+}
+
 GList **__pacrunner_manual_parse_servers(char **servers)
 {
 	char *host, *protocol;
+	GList **result;
 	char **uri;
+	int proto;
 	int ret;
 
 	if (servers == NULL)
+		return NULL;
+
+	result = g_try_malloc0(PACRUNNER_PROTOCOL_MAXIMUM_NUMBER *
+							sizeof(GList *));
+	if (result == NULL)
 		return NULL;
 
 	for (uri = (char **)servers; *uri != NULL; uri++) {
@@ -279,16 +316,37 @@ GList **__pacrunner_manual_parse_servers(char **servers)
 		if (ret < 0)
 			continue;
 
-		g_free(host);
+		proto = get_protocol_from_string(protocol);
+		if (proto == PACRUNNER_PROTOCOL_UNKNOWN)
+			goto error;
+
+		result[proto] = g_list_append(result[proto], host);
+
 		g_free(protocol);
 	}
+
+	return result;
+
+error:
+	g_free(host);
+	g_free(protocol);
+
+	__pacrunner_manual_destroy_servers(result);
 
 	return NULL;
 }
 
 void __pacrunner_manual_destroy_servers(GList **servers)
 {
-	return;
+	int i;
+
+	if (servers == NULL)
+		return;
+
+	for (i = 0; i < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER; i++)
+		g_list_free_full(servers[i], g_free);
+
+	g_free(servers);
 }
 
 GList **__pacrunner_manual_parse_excludes(char **excludes)
