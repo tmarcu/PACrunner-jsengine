@@ -29,6 +29,7 @@ src/pacrunner
 src/pacrunner.service
 libproxy/libproxy-1.0.pc
 tools/proxy
+tools/manual-proxy-test
 unit/test-mozjs
 unit/test-pacrunner
 unit/suite/*.xml
