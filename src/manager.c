@@ -237,9 +237,6 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 		if (pacrunner_proxy_set_manual(config->proxy,
 						servers, excludes) < 0)
 			pacrunner_error("Failed to set proxy servers");
-
-		servers = NULL;
-		excludes = NULL;
 	} else if (g_str_equal(method, "auto") == TRUE) {
 		if (pacrunner_proxy_set_auto(config->proxy, url, script) < 0)
 			pacrunner_error("Failed to set auto proxy");
