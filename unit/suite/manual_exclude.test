@@ -1,0 +1,33 @@
+[title]
+Manual configuration with exclusion
+
+[pac]
+
+[servers]
+http://proxy.internal.com
+https://secproxy.internal.com
+socks4://sockproxy.internal.com
+ftp://allftp.internal.com
+
+[excludes]
+stuff.com
+ftp://
+*net
+tri*
+
+[config]
+VALID
+
+[tests]
+http://stuff.com stuff.com
+DIRECT
+ftp://test.foo.org test.foo.org
+DIRECT
+http://proxied.org proxied.org
+proxy.internal.com
+https://bar.net/?property=true bar.net
+DIRECT
+trivial.co.uk:2984 trivial.co.uk
+DIRECT
+http://failed.com:99999/ failed.com
+DIRECT

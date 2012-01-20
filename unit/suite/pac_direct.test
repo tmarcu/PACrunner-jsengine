@@ -1,0 +1,21 @@
+[title]
+PAC code always returning DIRECT
+
+[pac]
+function FindProxyForURL(url, host)
+{
+	return "DIRECT";
+}
+
+[servers]
+
+[excludes]
+
+[config]
+VALID
+
+[tests]
+http://truc.com truc.com
+DIRECT
+ftp://test.boujou.org test.boujou.org
+DIRECT

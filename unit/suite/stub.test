@@ -25,3 +25,5 @@ Stub suite file
 # In case of a PAC file, returning a proxy result it should be:
 # http://test.com test.com
 # PROXY thetestproxy.com
+
+# If testing malformed url, the output will always be DIRECT

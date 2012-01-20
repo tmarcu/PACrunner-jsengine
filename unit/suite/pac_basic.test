@@ -1,0 +1,25 @@
+[title]
+Basic PAC code
+
+[pac]
+function FindProxyForURL(url, host)
+{
+	var me = myIpAddress();
+	var resolved_ip = dnsResolve(host);
+	if (me == "127.0.0.1") { return "DIRECT"; }
+	if (host == "127.0.0.1") { return "DIRECT"; }
+	if (host == "localhost") { return "DIRECT"; }
+	if (isPlainHostName(host)) { return "DIRECT"; }
+	return "PROXY proxy.example.com";
+}
+
+[servers]
+
+[excludes]
+
+[config]
+VALID
+
+[tests]
+http://www.example.com/site/test.html www.example.com
+PROXY proxy.example.com
