@@ -25,6 +25,11 @@
 
 #include <glib.h>
 
+#include <CUnit/CUnit.h>
+#include <CUnit/Basic.h>
+#include <CUnit/Automated.h>
+#include <CUnit/Console.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,6 +42,12 @@ enum test_suite_part {
 	SUITE_EXCLUDES = 3,
 	SUITE_CONFIG   = 4,
 	SUITE_TESTS    = 5,
+};
+
+enum cu_test_mode {
+	CU_MODE_BASIC   = 0,
+	CU_MODE_AUTO    = 1,
+	CU_MODE_CONSOLE = 2,
 };
 
 struct pacrunner_test_suite {
@@ -282,8 +293,36 @@ error:
 	return NULL;
 }
 
-static void run_test_suite(const char *test_file_path)
+static int test_suite_init(void)
 {
+	return 0;
+}
+
+static int test_suite_cleanup(void)
+{
+	return 0;
+}
+
+static void test_pac_config(void)
+{
+
+}
+
+static void test_manual_config(void)
+{
+
+}
+
+static void test_proxy_requests(void)
+{
+
+}
+
+static void run_test_suite(const char *test_file_path, enum cu_test_mode mode)
+{
+	CU_pTestRegistry cu_registry;
+	CU_pSuite cu_suite;
+
 	if (test_file_path == NULL)
 		return;
 
@@ -297,19 +336,65 @@ static void run_test_suite(const char *test_file_path)
 	if (verbose == TRUE)
 		printf("Valid suite\n");
 
+	cu_registry = CU_create_new_registry();
+
+	cu_registry = CU_set_registry(cu_registry);
+	CU_destroy_existing_registry(&cu_registry);
+
+	cu_suite = CU_add_suite(test_suite->title, test_suite_init,
+						test_suite_cleanup);
+
+	if (test_suite->pac != NULL)
+		CU_add_test(cu_suite, "PAC config test", test_pac_config);
+	else
+		CU_add_test(cu_suite, "Manual config test",
+						test_manual_config);
+
+	if (test_suite->config_result == TRUE && test_suite->tests != NULL)
+		CU_add_test(cu_suite, "Proxy requests test",
+						test_proxy_requests);
+
+	switch (mode) {
+	case CU_MODE_BASIC:
+		CU_basic_set_mode(CU_BRM_VERBOSE);
+
+		CU_basic_run_tests();
+
+		break;
+	case CU_MODE_AUTO:
+		CU_set_output_filename(test_file_path);
+		CU_list_tests_to_file();
+
+		CU_automated_run_tests();
+
+		break;
+	case CU_MODE_CONSOLE:
+		CU_console_run_tests();
+
+		break;
+	default:
+		break;
+	}
+
 	free_pacrunner_test_suite(test_suite);
 	test_suite = NULL;
 }
 
 static void find_and_run_test_suite(GDir *test_dir,
 					const char *test_path,
-					const char *file_path)
+					const char *file_path,
+					enum cu_test_mode mode)
 {
 	const gchar *test_file;
 	gchar *test_file_path;
 
 	if (test_dir == NULL && test_path == NULL)
 		return;
+
+	if (CU_initialize_registry() != CUE_SUCCESS) {
+		printf("%s\n", CU_get_error_msg());
+		return;
+	}
 
 	if (test_dir != NULL) {
 		for (test_file = g_dir_read_name(test_dir); test_file != NULL;
@@ -319,7 +404,7 @@ static void find_and_run_test_suite(GDir *test_dir,
 			if (test_file_path == NULL)
 				return;
 
-			run_test_suite(test_file_path);
+			run_test_suite(test_file_path, mode);
 
 			g_free(test_file_path);
 		}
@@ -330,10 +415,12 @@ static void find_and_run_test_suite(GDir *test_dir,
 		else
 			test_file_path = g_strdup(file_path);
 
-		run_test_suite(test_file_path);
+		run_test_suite(test_file_path, mode);
 
 		g_free(test_file_path);
 	}
+
+	CU_cleanup_registry();
 }
 
 static GDir *open_test_dir(gchar **test_path)
@@ -370,6 +457,7 @@ static void print_usage()
 		" suites are found\n"
 		"\t--file, -f file: specify a test suite file\n"
 		"\t--help, -h: print this help\n"
+		"\t--mode, -m CUnit mode: basic (default), auto, console\n"
 		"\t--verbose, -v: verbose output mode\n");
 }
 
@@ -377,12 +465,14 @@ static struct option test_options[] = {
 	{"dir",     1, 0, 'd'},
 	{"file",    1, 0, 'f'},
 	{"help",    0, 0, 'h'},
+	{"mode",    1, 0, 'm'},
 	{"verbose", 0, 0, 'v'},
 	{ NULL }
 };
 
 int main(int argc, char *argv[])
 {
+	enum cu_test_mode mode = CU_MODE_BASIC;
 	gchar *test_path = NULL;
 	gchar *file_path = NULL;
 	GDir *test_dir = NULL;
@@ -392,7 +482,7 @@ int main(int argc, char *argv[])
 	if (argc < 2)
 		goto error;
 
-	while ((c = getopt_long(argc, argv, "d:hv",
+	while ((c = getopt_long(argc, argv, "d:hm:v",
 			test_options, &opt_index)) != -1) {
 		switch (c) {
 		case 'd':
@@ -412,6 +502,15 @@ int main(int argc, char *argv[])
 		case 'h':
 			print_usage();
 			return EXIT_SUCCESS;
+
+			break;
+		case 'm':
+			if (strncmp(optarg, "basic", 5) == 0)
+				mode = CU_MODE_BASIC;
+			else if (strncmp(optarg, "auto", 4) == 0)
+				mode = CU_MODE_AUTO;
+			else if (strncmp(optarg, "console", 6) == 0)
+				mode = CU_MODE_CONSOLE;
 
 			break;
 		case 'v':
@@ -439,7 +538,7 @@ int main(int argc, char *argv[])
 	if (file_path != NULL)
 		test_path = g_get_current_dir();
 
-	find_and_run_test_suite(test_dir, test_path, file_path);
+	find_and_run_test_suite(test_dir, test_path, file_path, mode);
 
 	g_free(test_path);
 

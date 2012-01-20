@@ -49,7 +49,15 @@ AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug],
 ])
 
 AC_ARG_ENABLE(unit, AC_HELP_STRING([--enable-unit],
-			[enable compiling unit test binaries]))
+			[enable compiling unit test binaries]), [
+	if (test "${enable_unit}" = "yes"); then
+		AC_CHECK_LIB([cunit], [CU_initialize_registry], [], [
+			AC_MSG_ERROR([CUnit is required to get the unit tests])
+		])
+		LDFLAGS="$LDFLAGS -lcunit"
+	fi
+])
+
 AM_CONDITIONAL(UNIT, test "${enable_unit}" = "yes")
 
 AC_ARG_ENABLE(pie, AC_HELP_STRING([--enable-pie],
