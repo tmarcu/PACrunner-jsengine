@@ -46,6 +46,12 @@ enum pacrunner_manual_protocol {
 	PACRUNNER_PROTOCOL_UNKNOWN        = 7,
 };
 
+struct pacrunner_manual_exclude {
+	enum pacrunner_manual_exclude_appliance appliance;
+	int host_length;
+	char *host;
+};
+
 static int parse_uri(char *uri,
 			char **host,
 			char **protocol,
@@ -351,12 +357,83 @@ void __pacrunner_manual_destroy_servers(GList **servers)
 
 GList **__pacrunner_manual_parse_excludes(char **excludes)
 {
+	struct pacrunner_manual_exclude *exclude;
+	char *host, *protocol;
+	GList **result = NULL;
+	char **uri;
+	int proto;
+	int ret;
+
+	if (excludes == NULL)
+		return NULL;
+
+	result = g_try_malloc0(PACRUNNER_PROTOCOL_MAXIMUM_NUMBER *
+							sizeof(GList *));
+	if (result == NULL)
+		return NULL;
+
+	for (uri = (char **)excludes; *uri != NULL; uri++) {
+		ret = parse_uri(*uri, &host, &protocol, TRUE, TRUE);
+
+		if (ret < 0)
+			continue;
+
+		proto = get_protocol_from_string(protocol);
+		if (proto == PACRUNNER_PROTOCOL_UNKNOWN)
+			goto error;
+
+		exclude = g_try_malloc0(sizeof(
+					struct pacrunner_manual_exclude));
+		if (exclude == NULL)
+			goto error;
+
+		exclude->appliance = ret;
+		exclude->host = host;
+
+		if (host != NULL)
+			exclude->host_length = strlen(host);
+
+		result[proto] = g_list_append(result[proto], exclude);
+
+		g_free(protocol);
+		protocol = NULL;
+		host = NULL;
+	}
+
+	return result;
+
+error:
+	g_free(host);
+	g_free(protocol);
+
+	__pacrunner_manual_destroy_excludes(result);
+
 	return NULL;
+}
+
+static void free_exclude(gpointer data)
+{
+	struct pacrunner_manual_exclude *exclude;
+
+	exclude = (struct pacrunner_manual_exclude *) data;
+	if (exclude == NULL)
+		return;
+
+	g_free(exclude->host);
+	g_free(exclude);
 }
 
 void __pacrunner_manual_destroy_excludes(GList **excludes)
 {
-	return;
+	int i;
+
+	if (excludes == NULL)
+		return;
+
+	for (i = 0; i < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER; i++)
+		g_list_free_full(excludes[i], free_exclude);
+
+	g_free(excludes);
 }
 
 char *__pacrunner_manual_execute(const char *url, const char *host,
