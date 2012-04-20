@@ -1,3 +1,7 @@
+ver 0.5:
+	Add support for manual configuration handling.
+	Add support for set of unit tests.
+
 ver 0.4:
 	Fix issue with case sensitive strings for PAC files.
 	Add support for SOCKS proxies.
