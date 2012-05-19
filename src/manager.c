@@ -281,7 +281,7 @@ static DBusMessage *destroy_proxy_config(DBusConnection *conn,
 	return g_dbus_create_reply(msg, DBUS_TYPE_INVALID);
 }
 
-static GDBusMethodTable manager_methods[] = {
+static const GDBusMethodTable manager_methods[] = {
 	{ "CreateProxyConfiguration",  "a{sv}", "o", create_proxy_config  },
 	{ "DestroyProxyConfiguration", "o",     "",  destroy_proxy_config },
 	{ },
