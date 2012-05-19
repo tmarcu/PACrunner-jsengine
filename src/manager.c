@@ -282,8 +282,13 @@ static DBusMessage *destroy_proxy_config(DBusConnection *conn,
 }
 
 static const GDBusMethodTable manager_methods[] = {
-	{ "CreateProxyConfiguration",  "a{sv}", "o", create_proxy_config  },
-	{ "DestroyProxyConfiguration", "o",     "",  destroy_proxy_config },
+	{ _GDBUS_METHOD("CreateProxyConfiguration", "a{sv}", "o",
+			GDBUS_ARGS({ "settings", "a{sv}" }),
+			GDBUS_ARGS({ "path", "o" }),
+			create_proxy_config) },
+	{ _GDBUS_METHOD("DestroyProxyConfiguration", "o", "",
+			GDBUS_ARGS({ "configuration" , "o" }), NULL,
+			destroy_proxy_config) },
 	{ },
 };
 
