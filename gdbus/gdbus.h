@@ -155,6 +155,15 @@ typedef struct {
 	.function = _function, \
 	.flags = G_DBUS_METHOD_FLAG_ASYNC | G_DBUS_METHOD_FLAG_DEPRECATED
 
+#define _GDBUS_NOREPLY_METHOD(_name, _signature, _reply, _in_args, _out_args, _function) \
+	.name = _name, \
+	.signature = _signature, \
+	.reply = _reply, \
+	.in_args = _in_args, \
+	.out_args = _out_args, \
+	.function = _function, \
+	.flags = G_DBUS_METHOD_FLAG_NOREPLY
+
 #define _GDBUS_SIGNAL(_name, _signature, _args) \
 	.name = _name, \
 	.signature = _signature, \
@@ -194,6 +203,13 @@ typedef struct {
 	.out_args = _out_args, \
 	.function = _function, \
 	.flags = G_DBUS_METHOD_FLAG_ASYNC | G_DBUS_METHOD_FLAG_DEPRECATED
+
+#define GDBUS_NOREPLY_METHOD(_name, _in_args, _out_args, _function) \
+	.name = _name, \
+	.in_args = _in_args, \
+	.out_args = _out_args, \
+	.function = _function, \
+	.flags = G_DBUS_METHOD_FLAG_NOREPLY
 
 #define GDBUS_SIGNAL(_name, _args) \
 	.name = _name, \
