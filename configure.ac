@@ -131,7 +131,7 @@ AC_SUBST(GTHREAD_CFLAGS)
 AC_SUBST(GTHREAD_LIBS)
 
 AC_ARG_ENABLE(curl, AC_HELP_STRING([--enable-curl],
-		[enable CURL plugin support]), [enable_capng=${enableval}])
+		[enable CURL plugin support]), [enable_curl=${enableval}])
 if (test "${enable_curl}" = "yes"); then
 	PKG_CHECK_MODULES(CURL, libcurl >= 7.16, dummy=yes,
 				AC_MSG_ERROR(CURL >= 7.16 is required))
