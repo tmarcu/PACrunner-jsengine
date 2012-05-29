@@ -49,7 +49,7 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/manual.c src/js.h src/js.c src/javascript.h
 
 src_pacrunner_LDADD = $(builtin_libadd) @GLIB_LIBS@ @GTHREAD_LIBS@ \
-				@DBUS_LIBS@ @CAPNG_LIBS@ -ldl
+							@DBUS_LIBS@ -ldl
 
 src_pacrunner_LDFLAGS = -Wl,--export-dynamic
 
@@ -131,7 +131,7 @@ endif
 
 endif #UNIT
 
-AM_CFLAGS = @GLIB_CFLAGS@ @GTHREAD_LIBS@ @DBUS_CFLAGS@ @CAPNG_CFLAGS@ \
+AM_CFLAGS = @GLIB_CFLAGS@ @GTHREAD_LIBS@ @DBUS_CFLAGS@ \
 					$(builtin_cflags) \
 					-DPACRUNNER_PLUGIN_BUILTIN \
 					-DPLUGINDIR=\""$(plugindir)"\"

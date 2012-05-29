@@ -125,16 +125,6 @@ else
 fi
 AC_SUBST(DBUS_DATADIR)
 
-AC_ARG_ENABLE(capng, AC_HELP_STRING([--enable-capng],
-		[enable capabilities support]), [enable_capng=${enableval}])
-if (test "${enable_capng}" = "yes"); then
-	PKG_CHECK_MODULES(CAPNG, libcap-ng, dummy=yes,
-				AC_MSG_ERROR(Capabilities library is required))
-	AC_SUBST(CAPNG_CFLAGS)
-	AC_SUBST(CAPNG_LIBS)
-	AC_DEFINE(HAVE_CAPNG, 1, [Define to 1 if you have capabilities library.])
-fi
-
 PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.16, dummy=yes,
 			AC_MSG_ERROR(GThread >= 2.16 is required))
 AC_SUBST(GTHREAD_CFLAGS)

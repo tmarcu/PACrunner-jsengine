@@ -32,10 +32,6 @@
 
 #include <gdbus.h>
 
-#ifdef HAVE_CAPNG
-#include <cap-ng.h>
-#endif
-
 #include "pacrunner.h"
 
 static GMainLoop *main_loop = NULL;
@@ -157,12 +153,6 @@ int main(int argc, char *argv[])
 	DBusConnection *conn;
 	DBusError err;
 	guint signal;
-
-#ifdef HAVE_CAPNG
-	/* Drop capabilities */
-	capng_clear(CAPNG_SELECT_BOTH);
-	capng_apply(CAPNG_SELECT_BOTH);
-#endif
 
 	if (g_thread_supported() == FALSE)
 		g_thread_init(NULL);

@@ -13,5 +13,4 @@ fi
 		--enable-libproxy \
 		--enable-curl \
 		--enable-mozjs \
-		--enable-unit \
-		--enable-capng $*
+		--enable-unit $*
