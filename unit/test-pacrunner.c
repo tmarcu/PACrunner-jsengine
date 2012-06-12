@@ -44,6 +44,7 @@ enum test_suite_part {
 	SUITE_EXCLUDES = 3,
 	SUITE_CONFIG   = 4,
 	SUITE_TESTS    = 5,
+	SUITE_NOTHING  = 6,
 };
 
 enum cu_test_mode {
@@ -165,8 +166,8 @@ static void print_test_suite(struct pacrunner_test_suite *suite)
 
 static struct pacrunner_test_suite *read_test_suite(const char *path)
 {
+	enum test_suite_part part = SUITE_NOTHING;
 	struct pacrunner_test_suite *suite;
-	enum test_suite_part part;
 	gchar *content = NULL;
 	gchar **lines = NULL;
 	gchar **array;
@@ -255,6 +256,7 @@ static struct pacrunner_test_suite *read_test_suite(const char *path)
 				suite->tests = array;
 
 				break;
+			case SUITE_NOTHING:
 			default:
 				break;
 			}
