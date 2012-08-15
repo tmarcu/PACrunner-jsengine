@@ -90,8 +90,6 @@ static int resolve(const char *node, char *host, size_t hostlen)
 	return 0;
 }
 
-#ifdef MOZJS_VERSION_2_OR_SUPERIOR
-
 static JSBool myipaddress(JSContext *ctx, uintN argc, jsval *vp)
 {
 	const char *interface;
@@ -141,66 +139,10 @@ static JSBool dnsresolve(JSContext *ctx, uintN argc, jsval *vp)
 
 }
 
-#else
-
-static JSBool myipaddress(JSContext *ctx, JSObject *obj, uintN argc,
-						jsval *argv, jsval *rval)
-{
-	const char *interface;
-	char address[NI_MAXHOST];
-
-	DBG("");
-
-	*rval = JSVAL_NULL;
-
-	if (current_proxy == NULL)
-		return JS_TRUE;
-
-	interface = pacrunner_proxy_get_interface(current_proxy);
-	if (interface == NULL)
-		return JS_TRUE;
-
-	if (getaddr(interface, address, sizeof(address)) < 0)
-		return JS_TRUE;
-
-	DBG("address %s", address);
-
-	*rval = STRING_TO_JSVAL(JS_NewStringCopyZ(ctx, address));
-
-	return JS_TRUE;
-}
-
-static JSBool dnsresolve(JSContext *ctx, JSObject *obj, uintN argc,
-						jsval *argv, jsval *rval)
-{
-	char address[NI_MAXHOST];
-	char *host = JS_EncodeString(ctx, JS_ValueToString(ctx, argv[0]));
-
-	DBG("host %s", host);
-
-	*rval = JSVAL_NULL;
-
-	if (resolve(host, address, sizeof(address)) < 0)
-		goto out;
-
-	DBG("address %s", address);
-
-	*rval = STRING_TO_JSVAL(JS_NewStringCopyZ(ctx, address));
-
- out:
-	JS_free(ctx, host);
-	return JS_TRUE;
-}
-#endif
-
 static JSClass jscls = {
 	"global", JSCLASS_GLOBAL_FLAGS,
-#ifdef MOZJS_VERSION_2_OR_SUPERIOR
 	JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
 	JS_StrictPropertyStub,
-#else
-	JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-#endif
 	JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };

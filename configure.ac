@@ -72,13 +72,8 @@ AC_ARG_ENABLE(pie, AC_HELP_STRING([--enable-pie],
 AC_ARG_ENABLE(mozjs, AC_HELP_STRING([--enable-mozjs],
 		[enable Mozilla Javascript plugin support]))
 if (test "${enable_mozjs}" = "yes"); then
-	PKG_CHECK_MODULES(MOZJS,  mozilla-js >= 1.9, dummy=yes,
-			AC_MSG_ERROR(Mozilla Javascript >= 1.9 is required))
-
-	mozjs_version=`pkg-config --modversion mozilla-js | cut -d '.' -f 1`
-	if test ${mozjs_version} -gt 1; then
-		MOZJS_CFLAGS="${MOZJS_CFLAGS} -DMOZJS_VERSION_2_OR_SUPERIOR=1"
-	fi
+	PKG_CHECK_MODULES(MOZJS,  mozjs185, dummy=yes,
+			AC_MSG_ERROR(Mozilla Javascript >= 1.8 is required))
 
 	AC_SUBST(MOZJS_CFLAGS)
 	AC_SUBST(MOZJS_LIBS)
