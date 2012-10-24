@@ -151,7 +151,8 @@ CLEANFILES = src/builtin.h
 
 EXTRA_DIST = src/genbuiltin src/pacrunner.conf $(test_scripts) \
 			doc/architecture.txt doc/libproxy.txt \
-				doc/manager-api.txt doc/client-api.txt
+			doc/manager-api.txt doc/client-api.txt \
+			doc/manual-configuration.txt
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-libproxy --disable-datafiles \
 				--enable-mozjs --enable-curl
