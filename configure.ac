@@ -10,7 +10,7 @@ AM_MAINTAINER_MODE
 
 AC_PREFIX_DEFAULT(/usr/local)
 
-if (test "${libdir}" = '${exec_prefix}/lib'); then
+if (test "${libdir}" = "${exec_prefix}/lib"); then
 	libdir="${prefix}/lib"
 fi
 
