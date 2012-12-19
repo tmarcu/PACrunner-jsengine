@@ -12,7 +12,7 @@ dbusdata_DATA = src/pacrunner.service
 endif
 
 gdbus_sources = gdbus/gdbus.h gdbus/mainloop.c gdbus/watch.c \
-					gdbus/object.c gdbus/polkit.c
+				gdbus/object.c gdbus/client.c gdbus/polkit.c
 
 builtin_modules =
 builtin_sources =
