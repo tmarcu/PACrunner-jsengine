@@ -1,3 +1,6 @@
+ver 0.6:
+	Add support for SpiderMonkey JavaScript engine.
+
 ver 0.5:
 	Add support for manual configuration handling.
 	Add support for set of unit tests.
