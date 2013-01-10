@@ -138,7 +138,7 @@ AM_CFLAGS = @GLIB_CFLAGS@ @GTHREAD_LIBS@ @DBUS_CFLAGS@ \
 
 AM_CXXFLAGS = $(AM_CFLAGS)
 
-INCLUDES = -I$(builddir)/src -I$(srcdir)/src -I$(srcdir)/gdbus
+AM_CPPFLAGS = -I$(builddir)/src -I$(srcdir)/src -I$(srcdir)/gdbus
 
 test_scripts = test/find-proxy-for-url test/create-proxy-config
 
