@@ -620,9 +620,6 @@ int main(int argc, char *argv[])
 	if (file_path != NULL)
 		test_path = g_get_current_dir();
 
-	if (g_thread_supported() == FALSE)
-		g_thread_init(NULL);
-
 	__pacrunner_proxy_init();
 	__pacrunner_js_init();
 	__pacrunner_manual_init();
