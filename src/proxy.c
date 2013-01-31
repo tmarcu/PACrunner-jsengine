@@ -24,6 +24,7 @@
 #endif
 
 #include <errno.h>
+#include <pthread.h>
 
 #include "pacrunner.h"
 
@@ -39,8 +40,8 @@ struct pacrunner_proxy {
 };
 
 static GList *proxy_list = NULL;
-static GMutex *proxy_mutex = NULL;
-static GCond *proxy_cond = NULL;
+static pthread_mutex_t proxy_mutex;
+static pthread_cond_t proxy_cond;
 static int timeout_source = 0;
 static gint proxy_updating = -1; /* -1 for 'never set', with timeout */
 
@@ -154,12 +155,12 @@ int pacrunner_proxy_set_direct(struct pacrunner_proxy *proxy)
 	if (proxy == NULL)
 		return -EINVAL;
 
-	g_mutex_lock(proxy_mutex);
+	pthread_mutex_lock(&proxy_mutex);
 	if (proxy_updating == -1) {
 		proxy_updating = 0;
-		g_cond_broadcast(proxy_cond);
+		pthread_cond_broadcast(&proxy_cond);
 	}
-	g_mutex_unlock(proxy_mutex);
+	pthread_mutex_unlock(&proxy_mutex);
 
 	return set_method(proxy, PACRUNNER_PROXY_METHOD_DIRECT);
 }
@@ -209,10 +210,10 @@ static void download_callback(char *content, void *user_data)
 	pacrunner_proxy_enable(proxy);
 
 done:
-	g_mutex_lock(proxy_mutex);
+	pthread_mutex_lock(&proxy_mutex);
 	proxy_updating--;
-	g_cond_broadcast(proxy_cond);
-	g_mutex_unlock(proxy_mutex);
+	pthread_cond_broadcast(&proxy_cond);
+	pthread_mutex_unlock(&proxy_mutex);
 	pacrunner_proxy_unref(proxy);
 }
 
@@ -248,23 +249,23 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy,
 
 	pacrunner_proxy_ref(proxy);
 
-	g_mutex_lock(proxy_mutex);
+	pthread_mutex_lock(&proxy_mutex);
 	err = __pacrunner_download_update(proxy->interface, proxy->url,
 						download_callback, proxy);
 	if (err < 0) {
 		pacrunner_proxy_unref(proxy);
 		if (proxy_updating == -1) {
 			proxy_updating = 0;
-			g_cond_broadcast(proxy_cond);
+			pthread_cond_broadcast(&proxy_cond);
 		}
-		g_mutex_unlock(proxy_mutex);
+		pthread_mutex_unlock(&proxy_mutex);
 		return err;
 	}
 	if (proxy_updating == -1)
 		proxy_updating = 1;
 	else
 		proxy_updating++;
-	g_mutex_unlock(proxy_mutex);
+	pthread_mutex_unlock(&proxy_mutex);
 
 	return 0;
 }
@@ -288,13 +289,13 @@ int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
 
 	__pacrunner_js_set_proxy(proxy);
 
-	g_mutex_lock(proxy_mutex);
+	pthread_mutex_lock(&proxy_mutex);
 	if (proxy_updating == -1) {
 		proxy_updating = 0;
-		g_cond_broadcast(proxy_cond);
+		pthread_cond_broadcast(&proxy_cond);
 	}
 	proxy_list = g_list_append(proxy_list, proxy);
-	g_mutex_unlock(proxy_mutex);
+	pthread_mutex_unlock(&proxy_mutex);
 
 	return 0;
 }
@@ -312,9 +313,9 @@ int pacrunner_proxy_disable(struct pacrunner_proxy *proxy)
 	if (list == NULL)
 		return -ENXIO;
 
-	g_mutex_lock(proxy_mutex);
+	pthread_mutex_lock(&proxy_mutex);
 	proxy_list = g_list_remove_link(proxy_list, list);
-	g_mutex_unlock(proxy_mutex);
+	pthread_mutex_unlock(&proxy_mutex);
 
 	__pacrunner_js_set_proxy(NULL);
 
@@ -330,12 +331,12 @@ char *pacrunner_proxy_lookup(const char *url, const char *host)
 
 	DBG("url %s host %s", url, host);
 
-	g_mutex_lock(proxy_mutex);
+	pthread_mutex_lock(&proxy_mutex);
 	while (proxy_updating)
-		g_cond_wait(proxy_cond, proxy_mutex);
+		pthread_cond_wait(&proxy_cond, &proxy_mutex);
 
 	if (proxy_list == NULL) {
-		g_mutex_unlock(proxy_mutex);
+		pthread_mutex_unlock(&proxy_mutex);
 		return NULL;
 	}
 
@@ -350,7 +351,7 @@ char *pacrunner_proxy_lookup(const char *url, const char *host)
 			selected_proxy = proxy;
 	}
 
-	g_mutex_unlock(proxy_mutex);
+	pthread_mutex_unlock(&proxy_mutex);
 
 	if (selected_proxy == NULL)
 		return NULL;
@@ -378,7 +379,7 @@ static gboolean proxy_config_timeout(gpointer user_data)
 	   a reasonable length of time, start responding 'DIRECT'. */
 	if (proxy_updating == -1) {
 		proxy_updating = 0;
-		g_cond_broadcast(proxy_cond);
+		pthread_cond_broadcast(&proxy_cond);
 	}
 	return FALSE;
 }
@@ -387,8 +388,8 @@ int __pacrunner_proxy_init(void)
 {
 	DBG("");
 
-	proxy_mutex = g_mutex_new();
-	proxy_cond = g_cond_new();
+	pthread_mutex_init(&proxy_mutex, NULL);
+	pthread_cond_init(&proxy_cond, NULL);
 
 	timeout_source = g_timeout_add_seconds(5, proxy_config_timeout, NULL);
 
@@ -410,11 +411,8 @@ void __pacrunner_proxy_cleanup(void)
 			pacrunner_proxy_unref(proxy);
 	}
 
-	g_mutex_free(proxy_mutex);
-	proxy_mutex = NULL;
-
-	g_cond_free(proxy_cond);
-	proxy_cond = NULL;
+	pthread_mutex_destroy(&proxy_mutex);
+	pthread_cond_destroy(&proxy_cond);
 
 	g_list_free(proxy_list);
 	proxy_list = NULL;
