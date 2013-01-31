@@ -24,13 +24,14 @@
 #endif
 
 #include <gdbus.h>
+#include <pthread.h>
 
 #include "pacrunner.h"
 
 struct jsrun_data {
 	DBusConnection *conn;
 	DBusMessage *msg;
-	GThread *thread;
+	pthread_t thread;
 };
 
 static void jsrun_free(gpointer data)
@@ -42,7 +43,7 @@ static void jsrun_free(gpointer data)
 	g_free(jsrun);
 }
 
-static gpointer jsrun_thread(gpointer data)
+static void *jsrun_thread(void *data)
 {
 	struct jsrun_data *jsrun = data;
 	const char *sender, *url, *host;
@@ -74,7 +75,7 @@ static gpointer jsrun_thread(gpointer data)
 
 	jsrun_free(jsrun);
 
-	g_thread_exit(NULL);
+	pthread_exit(NULL);
 
 	return NULL;
 }
@@ -93,8 +94,7 @@ static DBusMessage *find_proxy_for_url(DBusConnection *conn,
 	jsrun->conn = dbus_connection_ref(conn);
 	jsrun->msg = dbus_message_ref(msg);
 
-	jsrun->thread = g_thread_create(jsrun_thread, jsrun, FALSE, NULL);
-	if (jsrun->thread == NULL) {
+	if (pthread_create(&jsrun->thread, NULL, jsrun_thread, jsrun) != 0) {
 		jsrun_free(jsrun);
 		return g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
