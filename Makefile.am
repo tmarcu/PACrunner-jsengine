@@ -48,7 +48,7 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/client.c src/manager.c src/proxy.c \
 			src/manual.c src/js.h src/js.c src/javascript.h
 
-src_pacrunner_LDADD = $(builtin_libadd) @GLIB_LIBS@ @GTHREAD_LIBS@ \
+src_pacrunner_LDADD = $(builtin_libadd) @GLIB_LIBS@ @PTHREAD_LIBS@ \
 							@DBUS_LIBS@ -ldl
 
 src_pacrunner_LDFLAGS = -Wl,--export-dynamic
@@ -85,6 +85,8 @@ tools_proxy_SOURCES = tools/proxy.c
 
 tools_proxy_LDADD = libproxy/libproxy.la
 
+tools_manual_proxy_test_LDADD = @GLIB_LIBS@
+
 tools_manual_proxy_test_SOURCES = tools/manual-proxy-test.c
 
 endif
@@ -110,7 +112,7 @@ endif
 if MOZJS
 unit_test_pacrunner_SOURCES += plugins/mozjs.c
 
-unit_test_pacrunner_LDADD += @MOZJS_LIBS@
+unit_test_pacrunner_LDADD += @MOZJS_LIBS@ @PTHREAD_LIBS@
 
 noinst_PROGRAMS += unit/test-mozjs
 
@@ -118,7 +120,7 @@ unit_test_mozjs_SOURCES = unit/test-mozjs.c src/pacrunner.h \
 			src/proxy.c src/manual.c src/download.c \
 				src/js.c plugins/mozjs.c
 
-unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@ @GTHREAD_LIBS@
+unit_test_mozjs_LDADD = @MOZJS_LIBS@ @GLIB_LIBS@ @PTHREAD_LIBS@
 endif
 
 if V8
@@ -131,10 +133,10 @@ endif
 
 endif #UNIT
 
-AM_CFLAGS = @GLIB_CFLAGS@ @GTHREAD_LIBS@ @DBUS_CFLAGS@ \
-					$(builtin_cflags) \
-					-DPACRUNNER_PLUGIN_BUILTIN \
-					-DPLUGINDIR=\""$(plugindir)"\"
+AM_CFLAGS = @GLIB_CFLAGS@ @PTHREAD_LIBS@ @DBUS_CFLAGS@ \
+				$(builtin_cflags) \
+				-DPACRUNNER_PLUGIN_BUILTIN \
+				-DPLUGINDIR=\""$(plugindir)"\"
 
 AM_CXXFLAGS = $(AM_CFLAGS)
 
