@@ -99,7 +99,7 @@ unit_test_pacrunner_SOURCES = unit/test-pacrunner.c src/pacrunner.h \
 			src/proxy.c src/manual.c src/download.c \
 			src/js.c src/log.c src/plugin.c
 
-unit_test_pacrunner_LDADD = @GLIB_LIBS@
+unit_test_pacrunner_LDADD = @GLIB_LIBS@ -ldl
 
 if CURL
 
