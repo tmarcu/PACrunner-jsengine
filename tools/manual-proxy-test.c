@@ -35,21 +35,22 @@
 	printf("%s() " fmt "\n", __func__ , ## arg); \
 } while (0)
 
+enum pacrunner_manual_exclude_appliance {
+	PACRUNNER_MANUAL_EXCLUDE_POST = 0,
+	PACRUNNER_MANUAL_EXCLUDE_PRE  = 1,
+	PACRUNNER_MANUAL_EXCLUDE_ANY  = 2,
+};
+
 enum pacrunner_manual_protocol {
 	PACRUNNER_PROTOCOL_ALL            = 0,
 	PACRUNNER_PROTOCOL_HTTP           = 1,
 	PACRUNNER_PROTOCOL_HTTPS          = 2,
 	PACRUNNER_PROTOCOL_FTP            = 3,
-	PACRUNNER_PROTOCOL_SOCKS4         = 4,
-	PACRUNNER_PROTOCOL_SOCKS5         = 5,
-	PACRUNNER_PROTOCOL_MAXIMUM_NUMBER = 6,
-	PACRUNNER_PROTOCOL_UNKNOWN        = 7,
-};
-
-enum pacrunner_manual_exclude_appliance {
-	PACRUNNER_MANUAL_EXCLUDE_POST = 0,
-	PACRUNNER_MANUAL_EXCLUDE_PRE  = 1,
-	PACRUNNER_MANUAL_EXCLUDE_ANY  = 2,
+	PACRUNNER_PROTOCOL_SOCKS          = 4,
+	PACRUNNER_PROTOCOL_SOCKS4         = 5,
+	PACRUNNER_PROTOCOL_SOCKS5         = 6,
+	PACRUNNER_PROTOCOL_MAXIMUM_NUMBER = 7,
+	PACRUNNER_PROTOCOL_UNKNOWN        = 8,
 };
 
 struct pacrunner_manual_exclude {
@@ -69,6 +70,8 @@ static enum pacrunner_manual_protocol get_protocol_from_string(const char *proto
 		return PACRUNNER_PROTOCOL_HTTPS;
 	if (g_strcmp0(protocol, "ftp") == 0)
 		return PACRUNNER_PROTOCOL_FTP;
+	if (g_strcmp0(protocol, "socks") == 0)
+		return PACRUNNER_PROTOCOL_SOCKS;
 	if (g_strcmp0(protocol, "socks4") == 0)
 		return PACRUNNER_PROTOCOL_SOCKS4;
 	if (g_strcmp0(protocol, "socks5") == 0)
@@ -88,10 +91,14 @@ static const char *get_protocol_to_string(enum pacrunner_manual_protocol protoco
 		return "HTTPS";
 	case PACRUNNER_PROTOCOL_FTP:
 		return "FTP";
+	case PACRUNNER_PROTOCOL_SOCKS:
+		return "SOCKS";
 	case PACRUNNER_PROTOCOL_SOCKS4:
 		return "SOCKS4";
 	case PACRUNNER_PROTOCOL_SOCKS5:
 		return "SOCKS5";
+	case PACRUNNER_PROTOCOL_MAXIMUM_NUMBER:
+	case PACRUNNER_PROTOCOL_UNKNOWN:
 	default:
 		break;
 	}
@@ -437,6 +444,41 @@ static void __pacrunner_manual_destroy_servers(GList **servers)
 	g_free(servers);
 }
 
+static const char *protocol_to_prefix_string(enum pacrunner_manual_protocol proto)
+{
+	switch (proto) {
+	case PACRUNNER_PROTOCOL_ALL:
+	case PACRUNNER_PROTOCOL_HTTP:
+	case PACRUNNER_PROTOCOL_HTTPS:
+	case PACRUNNER_PROTOCOL_FTP:
+		return "PROXY";
+	case PACRUNNER_PROTOCOL_SOCKS:
+		return "SOCKS";
+	case PACRUNNER_PROTOCOL_SOCKS4:
+		return "SOCKS4";
+	case PACRUNNER_PROTOCOL_SOCKS5:
+		return "SOCKS5";
+	case PACRUNNER_PROTOCOL_MAXIMUM_NUMBER:
+	case PACRUNNER_PROTOCOL_UNKNOWN:
+		break;
+	};
+
+	return "";
+}
+
+static GList *append_proxy(GList *list,
+			enum pacrunner_manual_protocol proto, char *host)
+{
+	char *proxy;
+
+	proxy = g_strdup_printf("%s %s",
+				protocol_to_prefix_string(proto), host);
+	if (proxy == NULL)
+		return list;
+
+	return g_list_append(list, proxy);
+}
+
 static GList **__pacrunner_manual_create_servers(const char **servers)
 {
 	char *host, *protocol;
@@ -463,9 +505,19 @@ static GList **__pacrunner_manual_create_servers(const char **servers)
 		if (proto == PACRUNNER_PROTOCOL_UNKNOWN)
 			goto error;
 
-		result[proto] = g_list_append(result[proto], host);
+		result[proto] = append_proxy(result[proto], proto, host);
+
+		if (proto == PACRUNNER_PROTOCOL_SOCKS) {
+			result[PACRUNNER_PROTOCOL_SOCKS4] = append_proxy(
+					result[PACRUNNER_PROTOCOL_SOCKS4],
+					PACRUNNER_PROTOCOL_SOCKS4, host);
+			result[PACRUNNER_PROTOCOL_SOCKS5] = append_proxy(
+					result[PACRUNNER_PROTOCOL_SOCKS5],
+					PACRUNNER_PROTOCOL_SOCKS5, host);
+		}
 
 		g_free(protocol);
+		g_free(host);
 	}
 
 	return result;
@@ -553,6 +605,75 @@ static gboolean is_url_excluded(GList **excludes,
 	return FALSE;
 }
 
+static inline char *append_server(char *prev_result, const char *proxy)
+{
+	char *result;
+
+	if (prev_result == NULL)
+		return g_strdup(proxy);
+
+	result = g_strjoin("; ", prev_result, proxy, NULL);
+	if (result == NULL)
+		return prev_result;
+
+	g_free(prev_result);
+
+	return result;
+}
+
+static inline char *append_servers_to_proxy_string(char *prev_result,
+							GList *proxies)
+{
+	char *result = prev_result;
+	GList *list, *prev;
+
+	prev = NULL;
+	for (list = proxies; list != NULL && list != prev;
+						prev = list, list = list->next)
+		result = append_server(result, (const char *) list->data);
+
+	return result;
+}
+
+static char *generate_proxy_string(GList **servers,
+				enum pacrunner_manual_protocol proto)
+{
+	enum pacrunner_manual_protocol i;
+	char *result = NULL;
+
+	/* if the protocol is known, we will prefer to set same
+	 * protocol-based proxies first, if any... */
+	if (proto >= PACRUNNER_PROTOCOL_HTTP &&
+				proto < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER) {
+		if (servers[proto] != NULL)
+			result = append_servers_to_proxy_string(result,
+							servers[proto]);
+
+		if (proto == PACRUNNER_PROTOCOL_SOCKS) {
+			if (servers[PACRUNNER_PROTOCOL_SOCKS4] != NULL)
+				result = append_servers_to_proxy_string(result,
+					servers[PACRUNNER_PROTOCOL_SOCKS4]);
+			if (servers[PACRUNNER_PROTOCOL_SOCKS5] != NULL)
+				result = append_servers_to_proxy_string(result,
+					servers[PACRUNNER_PROTOCOL_SOCKS5]);
+		}
+	}
+
+	/* And/or we add the rest in the list */
+	for (i = 0; i < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER; i++) {
+		if (i == proto || (proto == PACRUNNER_PROTOCOL_SOCKS &&
+					(i == PACRUNNER_PROTOCOL_SOCKS4 ||
+					 i == PACRUNNER_PROTOCOL_SOCKS5)))
+			continue;
+
+		if (servers[i] != NULL)
+			result = append_servers_to_proxy_string(result,
+								servers[i]);
+	}
+
+	return result;
+}
+
 static char *__pacrunner_manual_execute(const char *url,
 					GList **servers,
 					GList **excludes)
@@ -573,12 +694,7 @@ static char *__pacrunner_manual_execute(const char *url,
 	if (is_url_excluded(excludes, host, proto) == TRUE)
 		goto direct;
 
-	if (servers[PACRUNNER_PROTOCOL_ALL] != NULL)
-		result = (char *)servers[PACRUNNER_PROTOCOL_ALL]->data;
-	else if (proto >= PACRUNNER_PROTOCOL_HTTP &&
-				proto < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER)
-		if (servers[proto] != NULL)
-			result = (char *)servers[proto]->data;
+	result = generate_proxy_string(servers, proto);
 
 direct:
 	g_free(protocol);
