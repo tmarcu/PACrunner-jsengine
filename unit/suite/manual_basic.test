@@ -15,10 +15,10 @@ VALID
 
 [tests]
 http://stuff.com stuff.com
-proxy.internal.com
+PROXY proxy.internal.com; PROXY secproxy.internal.com; SOCKS4 sockproxy.internal.com
 ftp://test.foo.org test.foo.org
-DIRECT
+PROXY proxy.internal.com; PROXY secproxy.internal.com; SOCKS4 sockproxy.internal.com
 https://bar.net/?property=true bar.net
-secproxy.internal.com
+PROXY secproxy.internal.com; PROXY proxy.internal.com; SOCKS4 sockproxy.internal.com
 socks4://sockaccess.external.net:8888/sock_script sockaccess.external.net
-sockproxy.internal.com
+SOCKS4 sockproxy.internal.com; PROXY proxy.internal.com; PROXY secproxy.internal.com

@@ -24,7 +24,7 @@ DIRECT
 ftp://test.foo.org test.foo.org
 DIRECT
 http://proxied.org proxied.org
-proxy.internal.com
+PROXY proxy.internal.com; PROXY secproxy.internal.com; SOCKS4 sockproxy.internal.com; PROXY allftp.internal.com
 https://bar.net/?property=true bar.net
 DIRECT
 trivial.co.uk:2984 trivial.co.uk
