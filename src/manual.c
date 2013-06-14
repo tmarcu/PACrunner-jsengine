@@ -536,6 +536,55 @@ static gboolean is_url_excluded(GList **excludes,
 	return FALSE;
 }
 
+static inline char *append_server(char *prev_result, const char *proxy)
+{
+	char *result;
+
+	if (prev_result == NULL)
+		return g_strdup(proxy);
+
+	result = g_strjoin("; ", prev_result, proxy, NULL);
+	if (result == NULL)
+		return prev_result;
+
+	g_free(prev_result);
+
+	return result;
+}
+
+static inline char *append_servers_to_proxy_string(char *prev_result,
+							GList *proxies)
+{
+	char *result = prev_result;
+	GList *list, *prev;
+
+	prev = NULL;
+	for (list = proxies; list != NULL && list != prev;
+						prev = list, list = list->next)
+		result = append_server(result, (const char *) list->data);
+
+	return result;
+}
+
+static char *generate_proxy_string(GList **servers,
+				enum pacrunner_manual_protocol proto)
+{
+	char *result = NULL;
+
+	if (proto >= PACRUNNER_PROTOCOL_HTTP &&
+				proto < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER) {
+		if (servers[proto] != NULL)
+			result = append_servers_to_proxy_string(result,
+							servers[proto]);
+	}
+
+	if (servers[PACRUNNER_PROTOCOL_ALL] != NULL)
+		result = append_servers_to_proxy_string(result,
+					servers[PACRUNNER_PROTOCOL_ALL]);
+
+	return result;
+}
+
 char *__pacrunner_manual_execute(const char *url, const char *host,
 				 GList **servers, GList **excludes)
 {
@@ -560,18 +609,13 @@ char *__pacrunner_manual_execute(const char *url, const char *host,
 	if (is_url_excluded(excludes, host_p, proto) == TRUE)
 		goto direct;
 
-	if (servers[PACRUNNER_PROTOCOL_ALL] != NULL)
-		result = (char *)servers[PACRUNNER_PROTOCOL_ALL]->data;
-	else if (proto >= PACRUNNER_PROTOCOL_HTTP &&
-				proto < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER)
-		if (servers[proto] != NULL)
-			result = (char *)servers[proto]->data;
+	result = generate_proxy_string(servers, proto);
 
 direct:
 	g_free(protocol);
 	g_free(host_p);
 
-	return g_strdup(result);
+	return result;
 }
 
 int __pacrunner_manual_init(void)
