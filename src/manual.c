@@ -42,8 +42,9 @@ enum pacrunner_manual_protocol {
 	PACRUNNER_PROTOCOL_FTP            = 3,
 	PACRUNNER_PROTOCOL_SOCKS4         = 4,
 	PACRUNNER_PROTOCOL_SOCKS5         = 5,
-	PACRUNNER_PROTOCOL_MAXIMUM_NUMBER = 6,
-	PACRUNNER_PROTOCOL_UNKNOWN        = 7,
+	PACRUNNER_PROTOCOL_SOCKS          = 6,
+	PACRUNNER_PROTOCOL_MAXIMUM_NUMBER = 7,
+	PACRUNNER_PROTOCOL_UNKNOWN        = 8,
 };
 
 struct pacrunner_manual_exclude {
@@ -296,6 +297,8 @@ static enum pacrunner_manual_protocol get_protocol_from_string(const char *proto
 		return PACRUNNER_PROTOCOL_SOCKS4;
 	if (g_strcmp0(protocol, "socks5") == 0)
 		return PACRUNNER_PROTOCOL_SOCKS5;
+	if (g_strcmp0(protocol, "socks") == 0)
+		return PACRUNNER_PROTOCOL_SOCKS;
 
 	return PACRUNNER_PROTOCOL_UNKNOWN;
 }
@@ -312,6 +315,8 @@ static const char *protocol_to_prefix_string(enum pacrunner_manual_protocol prot
 		return "SOCKS4";
 	case PACRUNNER_PROTOCOL_SOCKS5:
 		return "SOCKS5";
+	case PACRUNNER_PROTOCOL_SOCKS:
+		return "SOCKS";
 	case PACRUNNER_PROTOCOL_MAXIMUM_NUMBER:
 	case PACRUNNER_PROTOCOL_UNKNOWN:
 		break;
@@ -320,9 +325,22 @@ static const char *protocol_to_prefix_string(enum pacrunner_manual_protocol prot
 	return "";
 }
 
+static GList *append_proxy(GList *list,
+			enum pacrunner_manual_protocol proto, char *host)
+{
+	char *proxy;
+
+	proxy = g_strdup_printf("%s %s",
+				protocol_to_prefix_string(proto), host);
+	if (proxy == NULL)
+		return list;
+
+	return g_list_append(list, proxy);
+}
+
 GList **__pacrunner_manual_parse_servers(char **servers)
 {
-	char *host, *protocol, *proxy;
+	char *host, *protocol;
 	GList **result;
 	char **uri;
 	int proto;
@@ -346,12 +364,16 @@ GList **__pacrunner_manual_parse_servers(char **servers)
 		if (proto == PACRUNNER_PROTOCOL_UNKNOWN)
 			goto error;
 
-		proxy = g_strdup_printf("%s %s",
-				protocol_to_prefix_string(proto), host);
-		if (proxy == NULL)
-			goto error;
+		result[proto] = append_proxy(result[proto], proto, host);
 
-		result[proto] = g_list_append(result[proto], proxy);
+		if (proto == PACRUNNER_PROTOCOL_SOCKS) {
+			result[PACRUNNER_PROTOCOL_SOCKS4] = append_proxy(
+					result[PACRUNNER_PROTOCOL_SOCKS4],
+					PACRUNNER_PROTOCOL_SOCKS4, host);
+			result[PACRUNNER_PROTOCOL_SOCKS5] = append_proxy(
+					result[PACRUNNER_PROTOCOL_SOCKS5],
+					PACRUNNER_PROTOCOL_SOCKS5, host);
+		}
 
 		g_free(protocol);
 		g_free(host);
@@ -576,6 +598,15 @@ static char *generate_proxy_string(GList **servers,
 		if (servers[proto] != NULL)
 			result = append_servers_to_proxy_string(result,
 							servers[proto]);
+
+		if (proto == PACRUNNER_PROTOCOL_SOCKS) {
+			if (servers[PACRUNNER_PROTOCOL_SOCKS4] != NULL)
+				result = append_servers_to_proxy_string(result,
+					servers[PACRUNNER_PROTOCOL_SOCKS4]);
+			if (servers[PACRUNNER_PROTOCOL_SOCKS5] != NULL)
+				result = append_servers_to_proxy_string(result,
+					servers[PACRUNNER_PROTOCOL_SOCKS5]);
+		}
 	}
 
 	if (servers[PACRUNNER_PROTOCOL_ALL] != NULL)
