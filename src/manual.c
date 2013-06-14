@@ -300,9 +300,29 @@ static enum pacrunner_manual_protocol get_protocol_from_string(const char *proto
 	return PACRUNNER_PROTOCOL_UNKNOWN;
 }
 
+static const char *protocol_to_prefix_string(enum pacrunner_manual_protocol proto)
+{
+	switch (proto) {
+	case PACRUNNER_PROTOCOL_ALL:
+	case PACRUNNER_PROTOCOL_HTTP:
+	case PACRUNNER_PROTOCOL_HTTPS:
+	case PACRUNNER_PROTOCOL_FTP:
+		return "PROXY";
+	case PACRUNNER_PROTOCOL_SOCKS4:
+		return "SOCKS4";
+	case PACRUNNER_PROTOCOL_SOCKS5:
+		return "SOCKS5";
+	case PACRUNNER_PROTOCOL_MAXIMUM_NUMBER:
+	case PACRUNNER_PROTOCOL_UNKNOWN:
+		break;
+	};
+
+	return "";
+}
+
 GList **__pacrunner_manual_parse_servers(char **servers)
 {
-	char *host, *protocol;
+	char *host, *protocol, *proxy;
 	GList **result;
 	char **uri;
 	int proto;
@@ -326,9 +346,15 @@ GList **__pacrunner_manual_parse_servers(char **servers)
 		if (proto == PACRUNNER_PROTOCOL_UNKNOWN)
 			goto error;
 
-		result[proto] = g_list_append(result[proto], host);
+		proxy = g_strdup_printf("%s %s",
+				protocol_to_prefix_string(proto), host);
+		if (proxy == NULL)
+			goto error;
+
+		result[proto] = g_list_append(result[proto], proxy);
 
 		g_free(protocol);
+		g_free(host);
 	}
 
 	return result;
