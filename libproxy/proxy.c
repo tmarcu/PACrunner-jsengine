@@ -66,55 +66,100 @@ void px_proxy_factory_free(pxProxyFactory *factory)
 	free(factory);
 }
 
-static char **extract_result(const char *str)
+static char *parse_result(const char *str)
 {
-	char **result;
+	const char *protocol;
+	int prefix_len;
+	char *result;
+	int len = 0;
 
-	result = malloc(sizeof(char *) * 2);
-	if (result == NULL)
-		return NULL;
+	printf("Parse %s\n", str);
 
-	result[0] = NULL;
-	result[1] = NULL;
-
-	if (strcasecmp(str, "DIRECT") == 0) {
-		result[0] = strdup("direct://");
-		return result;
-	}
+	if (strcasecmp(str, "DIRECT") == 0)
+		return strdup("direct://");
 
 	if (strncasecmp(str, "PROXY ", 6) == 0) {
-		int len = strlen(str + 6) + 8;
-		result[0] = malloc(len);
-		if (result[0] != NULL)
-			sprintf(result[0], "http://%s", str + 6);
-		return result;
-	}
+		prefix_len = 6;
+		protocol = "http";
+		len = 8;
+	} else if (strncasecmp(str, "SOCKS ", 6) == 0) {
+		prefix_len = 6;
+		protocol = "socks";
+		len = 9;
+	} else if (strncasecmp(str, "SOCKS4 ", 7) == 0) {
+		prefix_len = 7;
+		protocol = "socks4";
+		len = 10;
+	} else if (strncasecmp(str, "SOCKS5 ", 7) == 0) {
+		prefix_len = 7;
+		protocol = "socks5";
+		len = 10;
+	} else
+		return strdup("direct://");
 
-	if (strncasecmp(str, "SOCKS ", 6) == 0) {
-		int len = strlen(str + 6) + 9;
-		result[0] = malloc(len);
-		if (result[0] != NULL)
-			sprintf(result[0], "socks://%s", str + 6);
-		return result;
-	}
+	len = strlen(str + prefix_len) + len;
 
-	if (strncasecmp(str, "SOCKS4 ", 7) == 0) {
-		int len = strlen(str + 7) + 10;
-		result[0] = malloc(len);
-		if (result[0] != NULL)
-			sprintf(result[0], "socks4://%s", str + 7);
-		return result;
-	}
-
-	if (strncasecmp(str, "SOCKS5 ", 7) == 0) {
-		int len = strlen(str + 7) + 10;
-		result[0] = malloc(len);
-		if (result[0] != NULL)
-			sprintf(result[0], "socks5://%s", str + 7);
-		return result;
-	}
+	result = malloc(len);
+	if (result != NULL)
+		sprintf(result, "%s://%s", protocol, str + prefix_len);
 
 	return result;
+}
+
+static char **append_result(char **prev_results, int *size, char *result)
+{
+	char **results;
+
+	results = realloc(prev_results, sizeof(char *) * (*size + 2));
+	if (results == NULL) {
+		free(result);
+		return prev_results;
+	}
+
+	results[*size] = result;
+	results[*size + 1] = NULL;
+
+	*size = *size + 1;
+
+	return results;
+}
+
+static char **extract_results(const char *str)
+{
+	char *copy_str, *lookup, *pos, *c, *result;
+	char **results = NULL;
+	int nb_results = 0;
+
+	copy_str = strdup(str);
+	if (copy_str == NULL)
+		return NULL;
+
+	pos = copy_str;
+
+	while (1) {
+		if (pos == NULL || *pos == '\0' || strlen(pos) < 6)
+			break;
+
+		printf("pos: %s\n", pos);
+
+		lookup = pos;
+
+		c = strchr(pos, ';');
+		if (c != NULL) {
+			for (*c = '\0', c++;
+				c != NULL && *c == ' '; *c = '\0', c++);
+		}
+
+		pos = c;
+
+		result = parse_result(lookup);
+		if (result != NULL)
+			results = append_result(results, &nb_results, result);
+	}
+
+	free(copy_str);
+
+	return results;
 }
 
 char **px_proxy_factory_get_proxies(pxProxyFactory *factory, const char *url)
@@ -182,9 +227,12 @@ char **px_proxy_factory_get_proxies(pxProxyFactory *factory, const char *url)
 	if (str == NULL || strlen(str) == 0)
 		str = "DIRECT";
 
-	result = extract_result(str);
+	result = extract_results(str);
 
 	dbus_message_unref(reply);
+
+	if (result == NULL)
+		goto direct;
 
 	return result;
 
