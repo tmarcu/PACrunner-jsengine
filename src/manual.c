@@ -40,9 +40,9 @@ enum pacrunner_manual_protocol {
 	PACRUNNER_PROTOCOL_HTTP           = 1,
 	PACRUNNER_PROTOCOL_HTTPS          = 2,
 	PACRUNNER_PROTOCOL_FTP            = 3,
-	PACRUNNER_PROTOCOL_SOCKS4         = 4,
-	PACRUNNER_PROTOCOL_SOCKS5         = 5,
-	PACRUNNER_PROTOCOL_SOCKS          = 6,
+	PACRUNNER_PROTOCOL_SOCKS          = 4,
+	PACRUNNER_PROTOCOL_SOCKS4         = 5,
+	PACRUNNER_PROTOCOL_SOCKS5         = 6,
 	PACRUNNER_PROTOCOL_MAXIMUM_NUMBER = 7,
 	PACRUNNER_PROTOCOL_UNKNOWN        = 8,
 };
@@ -293,12 +293,12 @@ static enum pacrunner_manual_protocol get_protocol_from_string(const char *proto
 		return PACRUNNER_PROTOCOL_HTTPS;
 	if (g_strcmp0(protocol, "ftp") == 0)
 		return PACRUNNER_PROTOCOL_FTP;
+	if (g_strcmp0(protocol, "socks") == 0)
+		return PACRUNNER_PROTOCOL_SOCKS;
 	if (g_strcmp0(protocol, "socks4") == 0)
 		return PACRUNNER_PROTOCOL_SOCKS4;
 	if (g_strcmp0(protocol, "socks5") == 0)
 		return PACRUNNER_PROTOCOL_SOCKS5;
-	if (g_strcmp0(protocol, "socks") == 0)
-		return PACRUNNER_PROTOCOL_SOCKS;
 
 	return PACRUNNER_PROTOCOL_UNKNOWN;
 }
@@ -591,8 +591,11 @@ static inline char *append_servers_to_proxy_string(char *prev_result,
 static char *generate_proxy_string(GList **servers,
 				enum pacrunner_manual_protocol proto)
 {
+	enum pacrunner_manual_protocol i;
 	char *result = NULL;
 
+	/* if the protocol is known, we will prefer to set same
+	 * protocol-based proxies first, if any... */
 	if (proto >= PACRUNNER_PROTOCOL_HTTP &&
 				proto < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER) {
 		if (servers[proto] != NULL)
@@ -609,9 +612,17 @@ static char *generate_proxy_string(GList **servers,
 		}
 	}
 
-	if (servers[PACRUNNER_PROTOCOL_ALL] != NULL)
-		result = append_servers_to_proxy_string(result,
-					servers[PACRUNNER_PROTOCOL_ALL]);
+	/* And/or we add the rest in the list */
+	for (i = 0; i < PACRUNNER_PROTOCOL_MAXIMUM_NUMBER; i++) {
+		if (i == proto || (proto == PACRUNNER_PROTOCOL_SOCKS &&
+					(i == PACRUNNER_PROTOCOL_SOCKS4 ||
+					 i == PACRUNNER_PROTOCOL_SOCKS5)))
+			continue;
+
+		if (servers[i] != NULL)
+			result = append_servers_to_proxy_string(result,
+								servers[i]);
+	}
 
 	return result;
 }
