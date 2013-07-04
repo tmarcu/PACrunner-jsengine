@@ -73,8 +73,6 @@ static char *parse_result(const char *str)
 	char *result;
 	int len = 0;
 
-	printf("Parse %s\n", str);
-
 	if (strcasecmp(str, "DIRECT") == 0)
 		return strdup("direct://");
 
@@ -139,8 +137,6 @@ static char **extract_results(const char *str)
 	while (1) {
 		if (pos == NULL || *pos == '\0' || strlen(pos) < 6)
 			break;
-
-		printf("pos: %s\n", pos);
 
 		lookup = pos;
 
