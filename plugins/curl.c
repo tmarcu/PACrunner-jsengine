@@ -66,7 +66,7 @@ static void check_sockets(CURLM *multi, CURLMcode result, int handles)
 
 	do {
 		msg = curl_multi_info_read(multi, &msgs_left);
-		if (msg == NULL)
+		if (!msg)
 			break;
 
 		if (msg->msg != CURLMSG_DONE)
@@ -274,7 +274,7 @@ static int curl_download(const char *interface, const char *url,
 	DBG("url %s", url);
 
 	download = g_try_new0(struct download_data, 1);
-	if (download == NULL)
+	if (!download)
 		return -ENOMEM;
 
 	download->url = g_strdup(url);
