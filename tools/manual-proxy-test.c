@@ -126,16 +126,16 @@ static const char *get_appliance_to_string(enum pacrunner_manual_exclude_applian
 static int parse_uri(char *uri,
 			char **host,
 			char **protocol,
-			gboolean no_path,
-			gboolean exclusion)
+			bool no_path,
+			bool exclusion)
 {
 	int ret = PACRUNNER_MANUAL_EXCLUDE_POST;
-	gboolean proto, post_confirmed, ipv6;
+	bool proto, post_confirmed, ipv6;
 	char *scheme, *sep, *cur;
 	int length;
 	long int port;
 
-	proto = post_confirmed = ipv6 = FALSE;
+	proto = post_confirmed = ipv6 = false;
 	port = -1;
 
 	/**
@@ -174,7 +174,7 @@ static int parse_uri(char *uri,
 		}
 
 		cur = sep + 3;
-		proto = TRUE;
+		proto = true;
 	}
 
 	/**
@@ -184,8 +184,8 @@ static int parse_uri(char *uri,
 	 */
 	sep = strchr(cur, '/');
 	if (sep != NULL) {
-		if (exclusion == TRUE || (*(sep + 1) != '\0' &&
-							no_path == TRUE))
+		if (exclusion || (*(sep + 1) != '\0' &&
+							no_path))
 			goto error;
 
 		*sep = '\0';
@@ -197,7 +197,7 @@ static int parse_uri(char *uri,
 	 */
 	sep = strchr(cur, '@');
 	if (sep != NULL) {
-		if (exclusion == TRUE)
+		if (exclusion)
 			goto error;
 
 		*sep = '\0';
@@ -219,7 +219,7 @@ static int parse_uri(char *uri,
 		cur = sep;
 		sep = strchr(bracket, ':');
 
-		ipv6 = TRUE;
+		ipv6 = true;
 	} else
 		sep = strchr(cur, ':');
 
@@ -230,7 +230,7 @@ static int parse_uri(char *uri,
 	if (sep != NULL) {
 		char *err = NULL;
 
-		if (exclusion == TRUE)
+		if (exclusion)
 			goto error;
 
 		errno = 0;
@@ -250,11 +250,11 @@ static int parse_uri(char *uri,
 		*sep = '\0';
 
 	if (sep != cur) {
-		if (exclusion == FALSE)
+		if (!exclusion)
 			goto error;
 
 		cur = sep;
-		post_confirmed = TRUE;
+		post_confirmed = true;
 	}
 
 	/**
@@ -274,26 +274,26 @@ static int parse_uri(char *uri,
 			*sep = '\0';
 
 		if (sep - cur + 1 != length) {
-			if (exclusion == FALSE)
+			if (!exclusion)
 				goto error;
 
 			length = sep - cur + 1;
 
 			ret = PACRUNNER_MANUAL_EXCLUDE_PRE;
-			if (post_confirmed == TRUE)
+			if (post_confirmed)
 				ret = PACRUNNER_MANUAL_EXCLUDE_ANY;
 		}
 
 		if ((length > 255) || (*cur == '-' || *sep == '-') ||
-				((*cur == '\0') && (exclusion == FALSE ||
-				(exclusion == TRUE && proto == FALSE))))
+				((*cur == '\0') && (!exclusion ||
+				(exclusion && !proto))))
 			goto error;
 
 		/**
 		 * We do not allow some characters. However we do not run
 		 * a strict check if it's an IP address which is given
 		 */
-		if (ipv6 == TRUE)
+		if (ipv6)
 			forbidden_chars = "%?!,;@\\'*|<>{}()+=$&~# \"";
 		else
 			forbidden_chars = "%?!,;@\\'*|<>{}[]()+=$&~# \"";
@@ -330,8 +330,8 @@ static int parse_uri(char *uri,
 				goto error;
 		}
 	} else {
-		if (exclusion == FALSE ||
-				(exclusion == TRUE && proto == FALSE))
+		if (!exclusion ||
+				(exclusion && !proto))
 			goto error;
 		else
 			ret = PACRUNNER_MANUAL_EXCLUDE_ANY;
@@ -394,7 +394,7 @@ static GList **__pacrunner_manual_create_excludes(const char **excludes)
 		return NULL;
 
 	for (uri = (char **)excludes; *uri != NULL; uri++) {
-		ret = parse_uri(*uri, &host, &protocol, TRUE, TRUE);
+		ret = parse_uri(*uri, &host, &protocol, true, true);
 
 		if (ret < 0)
 			continue;
@@ -497,7 +497,7 @@ static GList **__pacrunner_manual_create_servers(const char **servers)
 		return NULL;
 
 	for (uri = (char **)servers; *uri != NULL; uri++) {
-		ret = parse_uri(*uri, &host, &protocol, TRUE, FALSE);
+		ret = parse_uri(*uri, &host, &protocol, true, false);
 
 		if (ret < 0)
 			continue;
@@ -532,7 +532,7 @@ error:
 	return NULL;
 }
 
-static gboolean is_exclusion_matching(GList *excludes_list,
+static bool is_exclusion_matching(GList *excludes_list,
 					const char *host)
 {
 	struct pacrunner_manual_exclude *exclusion;
@@ -559,51 +559,51 @@ static gboolean is_exclusion_matching(GList *excludes_list,
 				break;
 
 			if (*(cursor + exclusion->host_length) == '\0')
-				return TRUE;
+				return true;
 
 			break;
 		case PACRUNNER_MANUAL_EXCLUDE_PRE:
 			if (cursor == host)
-				return TRUE;
+				return true;
 
 			break;
 		case PACRUNNER_MANUAL_EXCLUDE_ANY:
 			if (exclusion->host != NULL) {
 				if (cursor != NULL)
-					return TRUE;
+					return true;
 				else
 					break;
 			}
 
-			return TRUE;
+			return true;
 		default:
 			break;
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
-static gboolean is_url_excluded(GList **excludes,
+static bool is_url_excluded(GList **excludes,
 				const char *host,
 				enum pacrunner_manual_protocol proto)
 {
 	if (excludes == NULL)
-		return FALSE;
+		return false;
 
 	if (excludes[PACRUNNER_PROTOCOL_ALL] != NULL)
 		if (is_exclusion_matching(excludes[PACRUNNER_PROTOCOL_ALL],
-								host) == TRUE)
-			return TRUE;
+								host))
+			return true;
 
 	if (proto == PACRUNNER_PROTOCOL_UNKNOWN)
-		return FALSE;
+		return false;
 
 	if (excludes[proto] != NULL)
-		if (is_exclusion_matching(excludes[proto], host) == TRUE)
-			return TRUE;
+		if (is_exclusion_matching(excludes[proto], host))
+			return true;
 
-	return FALSE;
+	return false;
 }
 
 static inline char *append_server(char *prev_result, const char *proxy)
@@ -687,12 +687,12 @@ static char *__pacrunner_manual_execute(const char *url,
 	if (servers == NULL)
 		return NULL;
 
-	if (parse_uri((char *)url, &host, &protocol, FALSE, FALSE) < 0)
+	if (parse_uri((char *)url, &host, &protocol, false, false) < 0)
 		goto direct;
 
 	proto = get_protocol_from_string(protocol);
 
-	if (is_url_excluded(excludes, host, proto) == TRUE)
+	if (is_url_excluded(excludes, host, proto))
 		goto direct;
 
 	result = generate_proxy_string(servers, proto);
