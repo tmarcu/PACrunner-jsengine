@@ -101,7 +101,7 @@ void pacrunner_proxy_unref(struct pacrunner_proxy *proxy)
 	if (proxy == NULL)
 		return;
 
-	if (g_atomic_int_dec_and_test(&proxy->refcount) == FALSE)
+	if (!g_atomic_int_dec_and_test(&proxy->refcount))
 		return;
 
 	reset_proxy(proxy);
