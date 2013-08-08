@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <pthread.h>
 
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -41,7 +42,7 @@
 #include "pacrunner.h"
 #include "js.h"
 
-static GStaticMutex mozjs_mutex = G_STATIC_MUTEX_INIT;
+static pthread_mutex_t mozjs_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static struct pacrunner_proxy *current_proxy = NULL;
 
@@ -221,7 +222,7 @@ static char * mozjs_execute(const char *url, const char *host)
 	if (jsctx == NULL)
 		return NULL;
 
-	g_static_mutex_lock(&mozjs_mutex);
+	pthread_mutex_lock(&mozjs_mutex);
 
 	JS_BeginRequest(jsctx);
 
@@ -235,7 +236,7 @@ static char * mozjs_execute(const char *url, const char *host)
 
 	JS_MaybeGC(jsctx);
 
-	g_static_mutex_unlock(&mozjs_mutex);
+	pthread_mutex_unlock(&mozjs_mutex);
 
 	if (result) {
 		answer = JS_EncodeString(jsctx, JS_ValueToString(jsctx, rval));
