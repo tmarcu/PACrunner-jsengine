@@ -59,16 +59,16 @@ struct pacrunner_test_suite {
 	gchar **servers;
 	gchar **excludes;
 
-	gboolean config_result;
+	bool config_result;
 
 	gchar **tests;
 };
 
 static struct pacrunner_test_suite *test_suite;
-static gboolean verbose = FALSE;
+static bool verbose = false;
 
 static struct pacrunner_proxy *proxy;
-static gboolean test_config;
+static bool test_config;
 
 static void free_pacrunner_test_suite(struct pacrunner_test_suite *suite)
 {
@@ -143,7 +143,7 @@ static void print_test_suite(struct pacrunner_test_suite *suite)
 		printf("(none)\n");
 
 	printf("\nConfig result: %s\n",
-			suite->config_result == TRUE ? "Valid" : "Invalid");
+			suite->config_result ? "Valid" : "Invalid");
 
 	printf("\nTests:\n");
 	if (suite->tests != NULL) {
@@ -177,7 +177,7 @@ static struct pacrunner_test_suite *read_test_suite(const char *path)
 	if (suite == NULL)
 		goto error;
 
-	if (g_file_get_contents(path, &content, NULL, NULL) == FALSE)
+	if (!g_file_get_contents(path, &content, NULL, NULL))
 		goto error;
 
 	if (strlen(content) <= 0)
@@ -242,9 +242,9 @@ static struct pacrunner_test_suite *read_test_suite(const char *path)
 				break;
 			case SUITE_CONFIG:
 				if (strncmp(*line, "VALID", 5) == 0)
-					suite->config_result = TRUE;
+					suite->config_result = true;
 				else
-					suite->config_result = FALSE;
+					suite->config_result = false;
 
 				break;
 			case SUITE_TESTS:
@@ -278,7 +278,7 @@ static struct pacrunner_test_suite *read_test_suite(const char *path)
 			part = SUITE_TESTS;
 	}
 
-	if (verbose == TRUE)
+	if (verbose)
 		print_test_suite(suite);
 
 	if (suite->title == NULL || (suite->tests != NULL
@@ -311,7 +311,7 @@ static int test_suite_init(void)
 
 static int test_suite_cleanup(void)
 {
-	if (test_config == TRUE) {
+	if (test_config) {
 		if (pacrunner_proxy_disable(proxy) != 0)
 			return -1;
 	}
@@ -324,7 +324,7 @@ static int test_suite_cleanup(void)
 static void test_pac_config(void)
 {
 	if (pacrunner_proxy_set_auto(proxy, NULL, test_suite->pac) == 0)
-		test_config = TRUE;
+		test_config = true;
 
 	CU_ASSERT_TRUE(test_suite->config_result == test_config);
 }
@@ -333,7 +333,7 @@ static void test_manual_config(void)
 {
 	if (pacrunner_proxy_set_manual(proxy, test_suite->servers,
 						test_suite->excludes) == 0)
-		test_config = TRUE;
+		test_config = true;
 
 	CU_ASSERT_TRUE(test_suite->config_result == test_config);
 }
@@ -341,15 +341,15 @@ static void test_manual_config(void)
 static void test_proxy_requests(void)
 {
 	gchar **test_strings;
-	gboolean verify;
+	bool verify;
 	gchar *result;
 	gchar **test;
 	gchar *msg;
 
-	if (test_config == FALSE)
+	if (!test_config)
 		return;
 
-	if (verbose == TRUE)
+	if (verbose)
 		printf("\n");
 
 	for (test = test_suite->tests; *test != NULL; test = test + 2) {
@@ -365,19 +365,19 @@ static void test_proxy_requests(void)
 						test_strings[1]);
 		g_strfreev(test_strings);
 
-		verify = FALSE;
+		verify = false;
 
 		if (strncmp(test_result, "DIRECT", 6) == 0) {
 			if (result == NULL ||
 					strncmp(result, "DIRECT", 6) == 0)
-				verify = TRUE;
+				verify = true;
 		} else {
 			if (g_strcmp0(result, test_result) == 0)
-				verify = TRUE;
+				verify = true;
 		}
 
-		if (verbose == TRUE) {
-			if (verify == TRUE)
+		if (verbose) {
+			if (verify)
 				msg = g_strdup_printf(
 						"\tTEST: %s -> %s verified",
 							*test, test_result);
@@ -408,12 +408,12 @@ static void run_test_suite(const char *test_file_path, enum cu_test_mode mode)
 
 	test_suite = read_test_suite(test_file_path);
 	if (test_suite == NULL) {
-		if (verbose == TRUE)
+		if (verbose)
 			printf("Invalid suite\n");
 		return;
 	}
 
-	if (verbose == TRUE)
+	if (verbose)
 		printf("Valid suite\n");
 
 	cu_registry = CU_create_new_registry();
@@ -430,11 +430,11 @@ static void run_test_suite(const char *test_file_path, enum cu_test_mode mode)
 		CU_add_test(cu_suite, "Manual config test",
 						test_manual_config);
 
-	if (test_suite->config_result == TRUE && test_suite->tests != NULL)
+	if (test_suite->config_result && test_suite->tests != NULL)
 		CU_add_test(cu_suite, "Proxy requests test",
 						test_proxy_requests);
 
-	test_config = FALSE;
+	test_config = false;
 
 	switch (mode) {
 	case CU_MODE_BASIC:
@@ -513,7 +513,7 @@ static GDir *open_test_dir(gchar **test_path)
 		return NULL;
 
 	test_dir = g_dir_open(*test_path, 0, NULL);
-	if (test_dir == NULL && g_path_is_absolute(*test_path) == FALSE) {
+	if (test_dir == NULL && !g_path_is_absolute(*test_path)) {
 		gchar *current, *path;
 
 		current = g_get_current_dir();
@@ -596,7 +596,7 @@ int main(int argc, char *argv[])
 
 			break;
 		case 'v':
-			verbose = TRUE;
+			verbose = true;
 
 			break;
 		case '?':
