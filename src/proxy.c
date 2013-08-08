@@ -52,7 +52,7 @@ struct pacrunner_proxy *pacrunner_proxy_create(const char *interface)
 	DBG("interface %s", interface);
 
 	proxy = g_try_new0(struct pacrunner_proxy, 1);
-	if (proxy == NULL)
+	if (!proxy)
 		return NULL;
 
 	proxy->refcount = 1;
@@ -69,7 +69,7 @@ struct pacrunner_proxy *pacrunner_proxy_ref(struct pacrunner_proxy *proxy)
 {
 	DBG("proxy %p", proxy);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return NULL;
 
 	g_atomic_int_inc(&proxy->refcount);
@@ -98,7 +98,7 @@ void pacrunner_proxy_unref(struct pacrunner_proxy *proxy)
 {
 	DBG("proxy %p", proxy);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return;
 
 	if (!g_atomic_int_dec_and_test(&proxy->refcount))
@@ -114,7 +114,7 @@ const char *pacrunner_proxy_get_interface(struct pacrunner_proxy *proxy)
 {
 	DBG("proxy %p", proxy);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return NULL;
 
 	return proxy->interface;
@@ -124,7 +124,7 @@ const char *pacrunner_proxy_get_script(struct pacrunner_proxy *proxy)
 {
 	DBG("proxy %p", proxy);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return NULL;
 
 	return proxy->script;
@@ -135,7 +135,7 @@ static int set_method(struct pacrunner_proxy *proxy,
 {
 	DBG("proxy %p method %d", proxy, method);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return -EINVAL;
 
 	if (proxy->method == method)
@@ -152,7 +152,7 @@ int pacrunner_proxy_set_direct(struct pacrunner_proxy *proxy)
 {
 	DBG("proxy %p", proxy);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return -EINVAL;
 
 	pthread_mutex_lock(&proxy_mutex);
@@ -172,10 +172,10 @@ int pacrunner_proxy_set_manual(struct pacrunner_proxy *proxy,
 
 	DBG("proxy %p servers %p excludes %p", proxy, servers, excludes);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return -EINVAL;
 
-	if (servers == NULL)
+	if (!servers)
 		return -EINVAL;
 
 	err = set_method(proxy, PACRUNNER_PROXY_METHOD_MANUAL);
@@ -183,7 +183,7 @@ int pacrunner_proxy_set_manual(struct pacrunner_proxy *proxy,
 		return err;
 
 	proxy->servers = __pacrunner_manual_parse_servers(servers);
-	if (proxy->servers == NULL)
+	if (!proxy->servers)
 		return -EINVAL;
 
 	proxy->excludes = __pacrunner_manual_parse_excludes(excludes);
@@ -199,7 +199,7 @@ static void download_callback(char *content, void *user_data)
 
 	DBG("url %s content %p", proxy->url, content);
 
-	if (content == NULL) {
+	if (!content) {
 		pacrunner_error("Failed to retrieve PAC script");
 		goto done;
 	}
@@ -224,7 +224,7 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy,
 
 	DBG("proxy %p url %s script %p", proxy, url, script);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return -EINVAL;
 
 	err = set_method(proxy, PACRUNNER_PROXY_METHOD_AUTO);
@@ -234,7 +234,7 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy,
 	g_free(proxy->url);
 	proxy->url = g_strdup(url);
 
-	if (proxy->url == NULL) {
+	if (!proxy->url) {
 		g_free(proxy->script);
 		proxy->script = g_strdup(script);
 	} else {
@@ -242,7 +242,7 @@ int pacrunner_proxy_set_auto(struct pacrunner_proxy *proxy,
 		proxy->script = NULL;
 	}
 
-	if (proxy->script != NULL) {
+	if (proxy->script) {
 		pacrunner_proxy_enable(proxy);
 		return 0;
 	}
@@ -276,15 +276,15 @@ int pacrunner_proxy_enable(struct pacrunner_proxy *proxy)
 
 	DBG("proxy %p", proxy);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return -EINVAL;
 
 	list = g_list_find(proxy_list, proxy);
-	if (list != NULL)
+	if (list)
 		return -EEXIST;
 
 	proxy = pacrunner_proxy_ref(proxy);
-	if (proxy == NULL)
+	if (!proxy)
 		return -EIO;
 
 	__pacrunner_js_set_proxy(proxy);
@@ -306,11 +306,11 @@ int pacrunner_proxy_disable(struct pacrunner_proxy *proxy)
 
 	DBG("proxy %p", proxy);
 
-	if (proxy == NULL)
+	if (!proxy)
 		return -EINVAL;
 
 	list = g_list_find(proxy_list, proxy);
-	if (list == NULL)
+	if (!list)
 		return -ENXIO;
 
 	pthread_mutex_lock(&proxy_mutex);
@@ -335,7 +335,7 @@ char *pacrunner_proxy_lookup(const char *url, const char *host)
 	while (proxy_updating)
 		pthread_cond_wait(&proxy_cond, &proxy_mutex);
 
-	if (proxy_list == NULL) {
+	if (!proxy_list) {
 		pthread_mutex_unlock(&proxy_mutex);
 		return NULL;
 	}
@@ -353,7 +353,7 @@ char *pacrunner_proxy_lookup(const char *url, const char *host)
 
 	pthread_mutex_unlock(&proxy_mutex);
 
-	if (selected_proxy == NULL)
+	if (!selected_proxy)
 		return NULL;
 
 	switch (selected_proxy->method) {
@@ -407,7 +407,7 @@ void __pacrunner_proxy_cleanup(void)
 
 		DBG("proxy %p", proxy);
 
-		if (proxy != NULL)
+		if (proxy)
 			pacrunner_proxy_unref(proxy);
 	}
 

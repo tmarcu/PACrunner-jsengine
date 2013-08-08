@@ -43,11 +43,11 @@ static bool add_plugin(void *handle, struct pacrunner_plugin_desc *desc)
 {
 	struct pacrunner_plugin *plugin;
 
-	if (desc->init == NULL)
+	if (!desc->init)
 		return false;
 
 	plugin = g_try_new0(struct pacrunner_plugin, 1);
-	if (plugin == NULL)
+	if (!plugin)
 		return false;
 
 	plugin->handle = handle;
@@ -119,10 +119,10 @@ int __pacrunner_plugin_init(const char *pattern, const char *exclude)
 	}
 
 	dir = g_dir_open(PLUGINDIR, 0, NULL);
-	if (dir == NULL)
+	if (!dir)
 		return -EIO;
 
-	while ((file = g_dir_read_name(dir)) != NULL) {
+	while ((file = g_dir_read_name(dir))) {
 		struct pacrunner_plugin_desc *desc;
 		void *handle;
 		char *filename;
@@ -134,7 +134,7 @@ int __pacrunner_plugin_init(const char *pattern, const char *exclude)
 		filename = g_build_filename(PLUGINDIR, file, NULL);
 
 		handle = dlopen(filename, RTLD_NOW);
-		if (handle == NULL) {
+		if (!handle) {
 			pacrunner_error("Can't load plugin %s: %s",
 							filename, dlerror());
 			g_free(filename);
@@ -144,7 +144,7 @@ int __pacrunner_plugin_init(const char *pattern, const char *exclude)
 		g_free(filename);
 
 		desc = dlsym(handle, "pacrunner_plugin_desc");
-		if (desc == NULL) {
+		if (!desc) {
 			pacrunner_error("Can't load plugin description: %s",
 								dlerror());
 			dlclose(handle);
@@ -180,7 +180,7 @@ void __pacrunner_plugin_cleanup(void)
 		if (plugin->desc->exit)
 			plugin->desc->exit();
 
-		if (plugin->handle != NULL)
+		if (plugin->handle)
 			dlclose(plugin->handle);
 
 		g_free(plugin);

@@ -64,7 +64,7 @@ static void *jsrun_thread(void *data)
 
 	DBG("result %s", result);
 
-	if (result == NULL)
+	if (!result)
 		result = direct;
 
 	g_dbus_send_reply(jsrun->conn, jsrun->msg, DBUS_TYPE_STRING, &result,
@@ -86,7 +86,7 @@ static DBusMessage *find_proxy_for_url(DBusConnection *conn,
 	struct jsrun_data *jsrun;
 
 	jsrun = g_try_new0(struct jsrun_data, 1);
-	if (jsrun == NULL)
+	if (!jsrun)
 		return g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 							"Out of memory");

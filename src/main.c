@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 	g_option_context_add_main_entries(context, options, NULL);
 
 	if (!g_option_context_parse(context, &argc, &argv, &error)) {
-		if (error != NULL) {
+		if (error) {
 			g_printerr("%s\n", error->message);
 			g_error_free(error);
 		} else
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 	dbus_error_init(&err);
 
 	conn = g_dbus_setup_bus(DBUS_BUS_SYSTEM, PACRUNNER_SERVICE, &err);
-	if (conn == NULL) {
+	if (!conn) {
 		if (dbus_error_is_set(&err)) {
 			fprintf(stderr, "%s\n", err.message);
 			dbus_error_free(&err);

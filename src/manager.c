@@ -83,11 +83,11 @@ static struct proxy_config *create_config(DBusConnection *conn,
 	struct proxy_config *config;
 
 	config = g_try_new0(struct proxy_config, 1);
-	if (config == NULL)
+	if (!config)
 		return NULL;
 
 	config->proxy = pacrunner_proxy_create(interface);
-	if (config->proxy == NULL) {
+	if (!config->proxy) {
 		g_free(config);
 		return NULL;
 	}
@@ -111,7 +111,7 @@ static char **extract_string_array(DBusMessageIter *array)
 	int index;
 
 	str = g_try_new(char *, 11);
-	if (str == NULL)
+	if (!str)
 		return NULL;
 
 	index = 0;
@@ -121,7 +121,7 @@ static char **extract_string_array(DBusMessageIter *array)
 
 		dbus_message_iter_get_basic(array, &value);
 
-		if (value == NULL || index > 9)
+		if (!value || index > 9)
 			break;
 
 		str[index++] = g_strdup(value);
@@ -209,7 +209,7 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 	DBG("sender %s method %s interface %s", sender, method, interface);
 	DBG("url %s script %p", url, script);
 
-	if (method == NULL) {
+	if (!method) {
 		reply = g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"No proxy method specified");
@@ -217,7 +217,7 @@ static DBusMessage *create_proxy_config(DBusConnection *conn,
 	}
 
 	config = create_config(conn, sender, interface);
-	if (config == NULL) {
+	if (!config) {
 		reply = g_dbus_create_error(msg,
 					PACRUNNER_ERROR_INTERFACE ".Failed",
 					"Memory allocation failed");
