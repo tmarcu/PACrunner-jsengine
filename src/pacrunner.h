@@ -22,6 +22,8 @@
 #include <dbus/dbus.h>
 #include <glib.h>
 
+#include <stdbool.h>
+
 #define PACRUNNER_SERVICE	"org.pacrunner"
 #define PACRUNNER_PATH		"/org/pacrunner"
 
