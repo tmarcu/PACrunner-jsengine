@@ -40,13 +40,13 @@ pxProxyFactory *px_proxy_factory_new(void)
 	pxProxyFactory *factory;
 
 	factory = malloc(sizeof(*factory));
-	if (factory == NULL)
+	if (!factory)
 		return NULL;
 
 	memset(factory, 0, sizeof(*factory));
 
 	factory->conn = dbus_bus_get_private(DBUS_BUS_SYSTEM, NULL);
-	if (factory->conn == NULL) {
+	if (!factory->conn) {
 		free(factory);
 		return NULL;
 	}
@@ -58,7 +58,7 @@ pxProxyFactory *px_proxy_factory_new(void)
 
 void px_proxy_factory_free(pxProxyFactory *factory)
 {
-	if (factory == NULL)
+	if (!factory)
 		return;
 
 	dbus_connection_close(factory->conn);
@@ -98,7 +98,7 @@ static char *parse_result(const char *str)
 	len = strlen(str + prefix_len) + len;
 
 	result = malloc(len);
-	if (result != NULL)
+	if (result)
 		sprintf(result, "%s://%s", protocol, str + prefix_len);
 
 	return result;
@@ -109,7 +109,7 @@ static char **append_result(char **prev_results, int *size, char *result)
 	char **results;
 
 	results = realloc(prev_results, sizeof(char *) * (*size + 2));
-	if (results == NULL) {
+	if (!results) {
 		free(result);
 		return prev_results;
 	}
@@ -129,27 +129,27 @@ static char **extract_results(const char *str)
 	int nb_results = 0;
 
 	copy_str = strdup(str);
-	if (copy_str == NULL)
+	if (!copy_str)
 		return NULL;
 
 	pos = copy_str;
 
 	while (1) {
-		if (pos == NULL || *pos == '\0' || strlen(pos) < 6)
+		if (!pos || *pos == '\0' || strlen(pos) < 6)
 			break;
 
 		lookup = pos;
 
 		c = strchr(pos, ';');
-		if (c != NULL) {
+		if (c) {
 			for (*c = '\0', c++;
-				c != NULL && *c == ' '; *c = '\0', c++);
+				c && *c == ' '; *c = '\0', c++);
 		}
 
 		pos = c;
 
 		result = parse_result(lookup);
-		if (result != NULL)
+		if (result)
 			results = append_result(results, &nb_results, result);
 	}
 
@@ -164,26 +164,26 @@ char **px_proxy_factory_get_proxies(pxProxyFactory *factory, const char *url)
 	const char *str = NULL;
 	char *scheme, *host, *port, *path, **result;
 
-	if (factory == NULL)
+	if (!factory)
 		return NULL;
 
-	if (url == NULL)
+	if (!url)
 		return NULL;
 
 	msg = dbus_message_new_method_call("org.pacrunner",
 			"/org/pacrunner/client", "org.pacrunner.Client",
 							"FindProxyForURL");
-	if (msg == NULL)
+	if (!msg)
 		goto direct;
 
 	scheme = strdup(url);
-	if (scheme == NULL) {
+	if (!scheme) {
 		dbus_message_unref(msg);
 		goto direct;
 	}
 
 	host = strstr(scheme, "://");
-	if (host != NULL) {
+	if (host) {
 		*host = '\0';
 		host += 3;
 	} else {
@@ -192,11 +192,11 @@ char **px_proxy_factory_get_proxies(pxProxyFactory *factory, const char *url)
 	}
 
 	path = strchr(host, '/');
-	if (path != NULL)
+	if (path)
 		*(path++) = '\0';
 
 	port = strrchr(host, ':');
-	if (port != NULL) {
+	if (port) {
 		char *end;
 		int tmp __attribute__ ((unused));
 
@@ -214,27 +214,27 @@ char **px_proxy_factory_get_proxies(pxProxyFactory *factory, const char *url)
 
 	dbus_message_unref(msg);
 
-	if (reply == NULL)
+	if (!reply)
 		goto direct;
 
 	dbus_message_get_args(reply, NULL, DBUS_TYPE_STRING, &str,
 							DBUS_TYPE_INVALID);
 
-	if (str == NULL || strlen(str) == 0)
+	if (!str || strlen(str) == 0)
 		str = "DIRECT";
 
 	result = extract_results(str);
 
 	dbus_message_unref(reply);
 
-	if (result == NULL)
+	if (!result)
 		goto direct;
 
 	return result;
 
 direct:
 	result = malloc(sizeof(char *) * 2);
-	if (result == NULL)
+	if (!result)
 		return NULL;
 
 	result[0] = strdup("direct://");
