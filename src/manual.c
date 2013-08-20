@@ -260,8 +260,7 @@ static int parse_uri(char *uri,
 				goto error;
 		}
 	} else {
-		if (!exclusion ||
-				(exclusion && !proto))
+		if (!exclusion || (exclusion && !proto))
 			goto error;
 		else
 			ret = PACRUNNER_MANUAL_EXCLUDE_ANY;
