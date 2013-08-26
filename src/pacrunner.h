@@ -38,7 +38,7 @@
 
 #include "log.h"
 
-int __pacrunner_log_init(const char *debug, bool detach);
+int __pacrunner_log_init(const char *debug, gboolean detach);
 void __pacrunner_log_cleanup(void);
 
 #include "plugin.h"
