@@ -88,6 +88,18 @@ if (test "${enable_v8}" = "yes"); then
 		[V8_LIBS="-lv8 -lpthread" AC_SUBST(V8_LIBS)],
 		[AC_MSG_ERROR(Chrome v8 is required)], -lpthread)
 fi
+
+AC_ARG_ENABLE(jsengine, AC_HELP_STRING([--enable-jsengine],
+		[enable Intel Javascript plugin support]))
+if (test "${enable_jsengine}" = "yes"); then
+	AC_PROG_YACC
+	AC_PROG_LEX
+	AC_SUBST(JSENGINE_CFLAGS)
+	AC_SUBST(JSENGINE_LIBS)
+fi
+
+AM_CONDITIONAL(JSENGINE, test "${enable_jsengine}" = "yes")
+
 AM_CONDITIONAL(V8, test "${enable_v8}" = "yes")
 
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, dummy=yes,

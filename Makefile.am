@@ -1,4 +1,3 @@
-
 AM_MAKEFLAGS = --no-print-directory
 
 if DATAFILES
@@ -39,6 +38,13 @@ builtin_sources += plugins/v8.cc
 builtin_libadd += @V8_LIBS@
 endif
 
+if JSENGINE
+builtin_modules += jsengine
+BUILT_SOURCES = jsengine/parser.h
+builtin_sources += plugins/jsengine.c
+builtin_libadd += @JSENGINE_LIBS@ -lfl
+endif
+
 sbin_PROGRAMS = src/pacrunner
 
 src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
@@ -47,6 +53,15 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/download.h src/download.c \
 			src/client.c src/manager.c src/proxy.c \
 			src/manual.c src/js.h src/js.c src/javascript.h
+
+
+AM_YFLAGS = -d
+builtin_sources += jsengine/parser.y jsengine/lexer.l jsengine/parser.h jsengine/tree.c \
+			jsengine/symbols.c jsengine/spider.c \
+			jsengine/math_functions.c jsengine/string_methods.c \
+			jsengine/array_methods.c jsengine/reg_expr_methods.c \
+			jsengine/boolean_methods.c \
+			jsengine/javascript_functions.c
 
 src_pacrunner_LDADD = $(builtin_libadd) @GLIB_LIBS@ @PTHREAD_LIBS@ \
 							@DBUS_LIBS@ -ldl
@@ -149,7 +164,8 @@ testdir = $(pkglibdir)/test
 test_SCRIPTS = $(test_scripts)
 endif
 
-CLEANFILES = src/builtin.h
+CLEANFILES = src/builtin.h jsengine/parser.c jsengine/parser.h \
+		jsengine/lexer.c
 
 EXTRA_DIST = src/genbuiltin src/pacrunner.conf $(test_scripts) \
 			doc/architecture.txt doc/libproxy.txt \

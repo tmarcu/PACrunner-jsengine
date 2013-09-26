@@ -1,0 +1,80 @@
+Intel JavaScript Engine
+***********************
+
+Copyright (C) 2013 Intel Corporation. All rights reserved.
+
+Functionality and features
+==========================
+
+The JavaScript engine (jsengine) provided with PACrunner is an
+alternative to Spidermonkey and V8. It is intended to be very low
+overhead, and able to run with limited resources - e.g on embedded
+devices with low memory. While the engine runs as a single program
+or plugin, it is technically split up into three different parts:
+the lexer, the parser, and the interpreter. Once a JavaScript file
+is loaded, it runs through the lexer and parser which stores the
+code into an intermediary abstract syntax tree. It does not need to
+be reparsed again unless the file is modified, so it can be quickly
+executed any number of times by the interpreter during the run time of
+the engine. The engine is not fully language complete, but it fully
+supports Proxy Autoconfig files, and a solid amount of JavaScript
+features based on the ECMA Script standards.
+
+The following features are what the jsengine currently
+supports:
+	- Loading one or multiple JavaScript files
+	- Parsing and Lexing JavaScript files once to be executed
+	  multiple times
+	- All data types: numbers (decimal and hex), strings, booleans,
+	  objects, functions, NULL, undefined, functions, arrays, and
+	  regular expressions
+	- typeof operator
+	- Single and multi-line comments
+	- if, else if, else, switch/case, while/do while, for, ternary
+	  operator, binary operators, unary operators,
+	  conditional operators
+	- Variable declarations
+	- Array declarations
+	- Function declarations
+	- Object and prototype declarations
+	- Global, statement, and function scope
+	- Recursion
+	- All comparators, math, string, and bitwise operations
+	- Math library functions
+	- String object functions
+	- Boolean object functions
+	- Array functions: concat, indexOf, lastIndexOf, reverse,
+	  toString
+	- RegExp functions: exec, test
+	- Proxy Autoconfig functions: dnsDomainIs, dnsDomainLevels,
+	  isInNet, isPlainHostName, shExpMatch, localHostOrDomainIs,
+	  myIpAddress, dnsResolve, isResolvable, weekdayRange,
+	  timeRange, dateRange
+	- Parsed code stored as Abstract Syntax Tree
+	- Symbols (functions, variables, etc) stored in hashtable at
+	  runtime
+		- Hashtable resizes depending on load balance
+	- Return of any (given) type from functions, loops, end of
+	  program
+	- Functions with arbitrary parameters and void functions
+	- Passing all types as parameters to functions
+	- Arrays of any type, including mixed type arrays
+	- Expressions in statements, conditionals, assignments,
+	  returns, and functions
+	- Testing option --test for unit testing scripts
+
+Compilation and Installation
+============================
+
+In order to compile PACrunner with jsengine support you must supply
+the --enable-jsengine option when configuring PACrunner. Required
+software packages include:
+	- Bison
+	- YACC
+	- GCC compiler
+
+Configure automatically searches for all the required components
+and packages.
+
+To compile and install run: 
+	make && make install

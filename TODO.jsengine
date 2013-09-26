@@ -1,0 +1,71 @@
+Background
+==========
+
+- Priority scale: High, Medium and Low
+
+- Complexity scale: C1, C2, C4 and C8.
+   The complexity scale is exponential, with complexity 1 being the
+   lowest complexity. Complexity is a function of both task 'complexity'
+   and task 'scope'.
+
+The JavaScript engine currently supports all fundamental
+aspects of JavaScript, and enough functions to parse PAC files
+completely. However, it still misses a few functions and features
+that would make it a fully language complete engine.
+
+Core
+====
+- String and Object Conversions
+
+   Priority: Medium
+   Complexity: C4
+
+   JavaScript is an untyped (dynamically typed) language, so
+   everything is treated as an object. This allows for things such as
+   "24" + 7, which will return "247" as the + operator treats 7 as a
+   string. Inversely, the expression "24" * 7 treats "24" as a number,
+   returning 168.
+
+   The engine does not support these in place type conversions yet,
+   so implementing more dynamic type checking would greatly extend
+   the features of this engine. This would have to be implemented in
+   all parts that deal with expressions or operations.
+
+Functionality
+=============
+- ECMA Standard Functions & Features
+
+   Priority: Low
+   Complexity: C2
+
+   The following functions should be available according to ECMA script
+   standards:
+	- ToPrimitive
+	- ToBoolean
+	- ToInteger
+	- ToInt32, ToUint32, ToUint16
+	- ToString
+	- ToObject
+	- Rest of Array object functions
+	- Date object and date functions
+	- Rest of Object functions
+	- Final RegExp function(s)
+	- try/catch/throw
+	- for-in statement
+	- with statement
+   For more specific information and implementation details, please
+   refer to the ECMA reference online.
+
+Error Checking
+==============
+- Parser and Interpreter error checking
+
+   Priority: Medium
+   Complexity: C4
+
+   The parser currently has some verbose error checking enabled, which
+   will notify you exactly what failed in terms of syntax errors. It
+   needs to support more verbose error checking with proper line
+   numbers at least.  In the interpreter, if a syntax error occurs the
+   code needs to handle the NULL or incorrect data correctly and exit
+   gracefully - terminating the engine if it cannot interpret the code.
