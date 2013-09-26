@@ -400,7 +400,7 @@ int is_reg_expr(struct ast *tree)
 	if (strcmp(temp->value.obj.type, "RegExp") == 0)
 		return 1;
 	
-	printf("it is not a reg epxr");
+	printf("This is not a RegExp");
 	return 0;
 	
 }
@@ -764,7 +764,7 @@ struct ast *string_match(char *name, struct ast_list *arguments)
 		remove_sym(name);
 		free(name);
 	} else
-		printf("this type does not work right now\n");
+		printf("this type is not supported\n");
 	
 	return retval;
 }

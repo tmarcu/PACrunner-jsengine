@@ -409,7 +409,7 @@ YYSTYPE yylval;
 
 void yyerror(char const *s)
 {
-	fprintf (stderr, "%s\n", s);
+	fprintf(stderr, "%s\n", s);
 }
 
 struct ast_list **parse_files(char **file, int sz)

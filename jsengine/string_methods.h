@@ -35,10 +35,12 @@ struct ast *string_splice(char *name, struct ast_list *arguments);
 struct ast *string_split(char *name, struct ast_list *arguments);
 struct ast *string_substr(char *name, struct ast_list *arguments);
 struct ast *string_substring(char *name, struct ast_list *arguments);
-void string_prototype(char *symbol_name, struct ast_list *arg_list);
-void string_setter(struct symbol *obj, char *new_str);
 struct ast *string_match(char *name, struct ast_list *arguments);
 struct ast *string_search(char *name, struct ast_list *arguments);
+
+void string_prototype(char *symbol_name, struct ast_list *arg_list);
+void string_setter(struct symbol *obj, char *new_str);
+
 char *get_string_value(struct symbol *object);
 
 #endif

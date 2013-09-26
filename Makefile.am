@@ -56,7 +56,7 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 
 
 AM_YFLAGS = -d
-builtin_sources += jsengine/parser.y jsengine/lexer.l jsengine/parser.h jsengine/tree.c \
+builtin_sources += jsengine/parser.y jsengine/lexer.l jsengine/tree.c \
 			jsengine/symbols.c jsengine/spider.c \
 			jsengine/math_functions.c jsengine/string_methods.c \
 			jsengine/array_methods.c jsengine/reg_expr_methods.c \
