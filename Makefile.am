@@ -38,12 +38,11 @@ builtin_sources += plugins/v8.cc
 builtin_libadd += @V8_LIBS@
 endif
 
-if JSENGINE
-builtin_modules += jsengine
+noinst_PROGRAMS =
+
 BUILT_SOURCES = jsengine/parser.h
-builtin_sources += plugins/jsengine.c
-builtin_libadd += @JSENGINE_LIBS@ -lfl
-endif
+
+AM_YFLAGS = -d
 
 sbin_PROGRAMS = src/pacrunner
 
@@ -54,14 +53,27 @@ src_pacrunner_SOURCES = $(gdbus_sources) $(builtin_sources) \
 			src/client.c src/manager.c src/proxy.c \
 			src/manual.c src/js.h src/js.c src/javascript.h
 
-
-AM_YFLAGS = -d
+if JSENGINE
+builtin_modules += jsengine
+builtin_sources += plugins/jsengine.c
 builtin_sources += jsengine/parser.y jsengine/lexer.l jsengine/tree.c \
 			jsengine/symbols.c jsengine/spider.c \
 			jsengine/math_functions.c jsengine/string_methods.c \
 			jsengine/array_methods.c jsengine/reg_expr_methods.c \
 			jsengine/boolean_methods.c \
 			jsengine/javascript_functions.c
+builtin_libadd += @JSENGINE_LIBS@ -lfl
+
+jsengine_jsengine_LDADD = -lfl -lm
+jsenginedir = jsengine
+jsengine_jsengine_SOURCES = jsengine/parser.y jsengine/lexer.l jsengine/tree.c \
+			jsengine/symbols.c jsengine/spider.c \
+			jsengine/math_functions.c jsengine/string_methods.c \
+			jsengine/array_methods.c jsengine/reg_expr_methods.c \
+			jsengine/boolean_methods.c \
+			jsengine/javascript_functions.c jsengine/main.c
+noinst_PROGRAMS += jsengine/jsengine
+endif
 
 src_pacrunner_LDADD = $(builtin_libadd) @GLIB_LIBS@ @PTHREAD_LIBS@ \
 							@DBUS_LIBS@ -ldl
